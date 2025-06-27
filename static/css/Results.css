@@ -1,0 +1,193 @@
+:root {
+    --Channels_Table_Header_Color: rgba(172, 172, 240, 1.0);
+    --Channels_Table_Header_Border_Color: rgba(128, 124, 124, 0.30);
+    --Channels_Table_Row_Color_Hover: rgba(172, 172, 240, 0.25);
+    --Channels_Table_Row_Color: rgba(243, 238, 238, 0.15);
+
+    --parameters-color: rgb(255, 255, 255);
+}
+
+.Results_Container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--body-color);
+    margin: 0rem;
+}
+
+.Parameter_Container {
+    display: flex;
+    flex-direction: row;
+
+    width: calc(100% -0.5rem);
+    height: 30%;
+    min-height: 30%;
+    max-height: fit-content;
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+    margin: 0.5rem 0.5rem 0.8rem 0.5rem;
+    padding: 0rem;
+
+    background-color: white;
+    border-style: solid;
+    border-width: 0.05rem;
+    border-radius: 1.5rem;
+}
+
+.Parameters {
+    display: flex;
+    flex-direction: column;
+
+    margin: 0.5rem;
+    padding: 1.0rem;
+    width: 16rem;
+    height: fit-content;
+
+    border-color: var(--parameters-container-border-color);    
+    border-style: solid;
+    border-radius: 1rem;
+    border-width: 0.1rem;
+
+    font-size: 0.8rem;
+
+    background-color: var(--body-color);
+}
+
+.Parameters-Table {
+    border-style: hidden;
+}
+
+.Parameters-Table_tr {
+    background-color: var(--body-color);
+}
+
+.Graphs_General {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+
+    width: calc(100% - 1rem);
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+    margin: 0rem 0rem 0.5rem 0.5rem;
+    
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+    background-color: white;
+    border-style: solid;
+    border-width: 0.05rem;
+    border-radius: 1.5rem;
+}
+
+.Graphs_LoadData_Container {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+
+    width: 100%;
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+    padding: 0.5rem;
+    
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+    background-color: white;
+    border-style: solid;
+    border-width: 0.0rem;
+    border-radius: 1.5rem;
+}
+
+.Table_Channel_Div {
+    display: flex;
+
+    width: 100%;
+    height: 100%;
+
+    padding: 0rem 0rem 0rem 0rem;
+}
+
+.Channels_Table {
+    width: 100%;
+    height: fit-content;
+}
+
+.Channels_Table_Thead {
+    user-select: none;
+    text-align: left;
+    background-color: var(--Channels_Table_Header_Color);
+
+    height: 3rem;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+} 
+
+.Channels_Table_body_Th_Right, .Channels_Table_body_Th_Left {
+    text-align: right;
+    padding-left: 5px;
+    padding-right: 5px;
+    border: 1px solid var(--Channels_Table_Header_Border_Color);
+}
+.Channels_Table_body_Th_Left {
+    text-align: left;
+}
+
+.Channels_Table_Body_Tr {
+    background-color: var(--Channels_Table_Row_Color);
+    height: 0.8 rem;
+}
+
+.Channels_Table_Body_Tr:hover {
+    background-color: var(--Channels_Table_Row_Color_Hover);
+}
+
+.Channels_Table_Body_Td_Right, .Channels_Table_Body_Td_Left {
+    text-align: right;
+    padding-left: 5px;
+    padding-right: 5px;
+    
+    border: 1px solid var(--Channels_Table_Header_Border_Color);
+}
+
+.Channels_Table_Body_Td_Left {
+    text-align: left;
+}
+
+/* ----------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------------- */
+.toggle { 
+    display: none;
+}
+.toggle-label {
+    display: block;
+    width: 1.8rem;
+    height: 1.0rem;
+    background: #ccc;
+    border-radius: 1.25rem;
+    position: relative;
+    cursor: pointer;
+    margin-left: 1.3rem;
+}
+.toggle-label::before {
+    content: '';
+    width: 0.75rem;
+    height: 0.75rem;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 0.125rem;
+    left: 0.125rem;
+    transition: left 0.2s;
+}
+.toggle:checked + .toggle-label { background: #4CAF50; }
+.toggle:checked + .toggle-label::before { left: 0.9rem; }
+/* ----------------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------------- */

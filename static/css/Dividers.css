@@ -1,0 +1,17 @@
+
+.Vertical_Divider {
+    width: 0.5rem;
+    background-color: var(--body-color);
+    cursor: col-resize;
+    user-select: none;
+    cursor: e-resize;
+}
+
+.Horizontal_Divider {
+    height: 0.5rem;
+    background-color: var(--body-color);
+    cursor: row-resize;
+    user-select: none;
+    cursor: s-resize;
+}
+

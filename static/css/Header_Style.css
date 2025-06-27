@@ -1,0 +1,106 @@
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+:root {
+    --header-main-color: rgb(242, 160, 19);
+--header-logo-font-size: 1.5rem;
+    --header-logo-font-color: black;
+    --header-height: 4.5rem;
+    --header-height-svg: 2rem;
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+.Header_Main {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    background-color: var(--header-main-color);
+    width: 100%;
+    height: var(--header-height);
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+.Header_Buttons {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: fit-content;
+    padding-right: 0.5rem;
+}
+
+.Header_Buttons_Menu_Div{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 4.5rem;
+    height: 100%;
+    padding-top: 0.5rem;
+    padding-left: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.8rem;
+}
+
+.Header_Buttons_Menu, .Header_Buttons_Settings,
+.Header_Buttons_Info, .Header_Buttons_Delete {
+    border: 0rem solid black;
+    background-color:var(--header-main-color);
+}
+
+.Header_Button_Svg {
+    width: var(--header-height-svg);
+    height: var(--header-height-svg);
+    min-width: var(--header-height-svg);
+    min-height: var(--header-height-svg);
+}
+
+.Header_Buttons_Delete {
+    padding-right: 0rem;
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+.Header_Logo {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: fit-content;
+    height: 100%;
+    user-select: none;
+    font-weight: bold;
+}
+
+.Header_Logo_Img {
+    display: inline-block;
+    width: calc(1.60*var(--header-height-svg));
+    height: calc(1.60*var(--header-height-svg));
+}
+
+.Header_Logo_Span {
+    height: 100%;
+    width: fit-content;
+    display: flex;
+    align-items: center;
+    padding-left: 0.5rem;
+    font-size: var(--header-logo-font-size);
+    font-weight: lighter;
+    text-align: left;
+    text-decoration: none;
+    color: var(--header-logo-font-color);
+}
+
+
+
+
+
+

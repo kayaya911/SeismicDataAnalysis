@@ -1,0 +1,192 @@
+:root {
+    --progressBar-color: rgb(206, 201, 201);
+    --progressBar-Moving_color: rgb(172, 172, 240);
+}
+
+.File_Tree_Container {
+    display: flex;
+    flex-direction: column;
+    
+    background-color: var(--body-color);
+    
+    margin: 0rem;
+    padding: 0 0.5rem 0.5rem 0.5rem;
+
+    height: 100%;
+    min-width: 18rem;
+    width: 18rem;
+
+}
+
+.TreeView {
+    flex: 1;
+    flex-direction: column;
+    margin-top: auto;
+
+    overflow-y: auto;
+    white-space: nowrap; /* Prevents text from wrapping */
+
+    width: 100%;
+    scrollbar-width: none;
+    
+    background-color: white;
+    border-style: solid;
+    border-width: 0.05rem;
+    border-radius: 1.5rem;
+}
+
+.FileLoading {
+    width: 100%;
+    height: fit-content;
+
+    background-color: white;
+    border-style: solid;
+    border-width: 0.05rem;
+    border-radius: 1.5rem;
+
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+
+    padding-bottom: 0.5rem;
+}
+
+.Calculate_Div {
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    height: fit-content;
+    justify-content: center;  /* Horizontal centering */
+    align-items: center;      /* Vertical centering */
+
+    padding: 0rem 1rem 0rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.Calculate_Button {
+    width: 100%;
+    height: fit-content  !important;
+    font-size: 1.3rem !important;
+    
+    color: black !important;
+    background-color: var(--progressBar-Moving_color) !important;
+    border-color: var(--progressBar-Moving_color)  !important;
+}
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+.Files_ul {
+    list-style-type: none;
+    margin: 0;
+    padding-left: 0.5rem;
+}
+
+.Files {
+    font-size: 0.9rem;
+    font-weight: bolder;
+    user-select: none;
+    margin-bottom: 0.0rem;
+    margin-top: 1.0rem;
+}
+
+.Files_Ch {
+    font-size: 0.8rem;
+    font-weight: normal;
+    user-select: none;
+    margin-bottom: 0.1rem;
+}
+
+.File_CheckBox_Ch {
+    margin: 0rem 0.3rem 0rem 2.5rem;
+}
+
+.File_Span_Ch {
+    margin: 0rem 0.3rem 0rem 0.3rem;
+}
+
+.File_SVG {
+    margin-right: 0.5rem;
+}
+
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+.ProgressBar_Div {
+    background-color: var(--progressBar-color);
+    height: 3rem;
+    margin: 0rem 1rem 1rem 1rem;
+
+    border-radius: 0.5rem  !important;
+}
+
+.ProgressBar_Label{
+    margin: 0.3rem 1rem 0.3rem 1rem;
+    user-select: none;
+}
+
+.ProgressBar {
+    width: 0%;
+    height: 100%;
+    user-select: none;
+    background-color: var(--progressBar-Moving_color);
+
+    
+    font-size: 1.3rem;
+    text-align: center ;   /* To center it horizontally (if you want) */
+    line-height: 3rem;     /* To center it vertically */
+    color: black;
+    transition: width 0.3s ease;
+
+    border-radius: 0.5rem  !important;
+}
+
+.LabelClass {
+    white-space: pre; /* Preserves exact spaces and line breaks */
+}
+
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+
+.Right_Click_Div {
+    display: none;
+    position: absolute;
+    font-size: 0.85rem;;
+    background-color: var(--body-color);
+    border-style: solid;
+    border-width: 0.05rem;
+    border-radius: 0.5rem;
+    
+    width: 13rem;
+    height: fit-content;
+
+    padding: 0.5rem;
+
+    z-index: 2;
+}
+
+.Right_Click_ul {
+    user-select: none;
+    list-style: none;
+    margin: 0rem 0rem 0.4rem 0.4rem;
+    padding: 0;
+}
+
+.Right_Click_li {
+    list-style: none;
+    user-select: none;
+    margin: 0rem;
+    padding: 0rem;
+}
+
+.Right_Click_li:hover {
+    background-color: rgb(202, 238, 191);
+}
+
+.RightClick_Label {
+    margin-left: 0.5rem;
+}
+
+.RightClick_Label_br {
+    user-select: none;
+    display: none;
+    font-weight: bold;
+    margin: 0rem 0rem 0rem 0.4rem;
+}

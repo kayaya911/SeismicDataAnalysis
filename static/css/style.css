@@ -1,0 +1,97 @@
+:root {
+    --body-color: rgb(247, 243, 243);
+    --main-container-color: rgb(67, 220, 231);
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+
+    background-color: var(--body-color);
+
+    font-size: var(--header-logo-font-size);
+    font-family: 'Arial';
+
+    padding: 0rem;
+    margin: 0rem;
+    overflow: hidden;
+    height: 100%;
+
+}
+
+html {
+    height: 100%;
+    padding: 0rem;
+    margin: 0rem;
+    overflow: hidden;
+}
+
+::-webkit-scrollbar {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: red;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+.Main_Container {
+    display: flex;
+    background-color: var(--main-container-color);
+    height: calc(100% - var(--header-height) );
+    width: 100%;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/
+/* Container for the toggle */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 3.5rem;
+    height: 1.5rem;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 1rem;
+    width: 1rem;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+    transform: translateX(2rem);
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------*/

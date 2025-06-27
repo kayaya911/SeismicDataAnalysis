@@ -1,0 +1,128 @@
+
+
+.Plotly_Main_Container {
+    display: flex;
+    flex-direction: row;
+    background-color:brown;
+    
+    width: 100%;
+    height: 18rem;
+    min-height: 18rem;
+    
+    margin: 0rem;
+    padding: 0rem;
+    box-sizing: border-box;
+
+    border-color: black;    
+    border-style: solid;
+    border-radius: 0rem;
+    border-width: 0px;
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+    font-size: 0.8rem;
+}
+
+.Plotly_Div {
+    flex-direction: row;
+    background-color:rgb(158, 148, 148);
+    
+    width: calc(100% - 15rem);
+    height: 100%;
+    
+    margin: 0rem;
+    padding: 0rem;
+
+    border-color: black;    
+    border-style: solid;
+    border-radius: 0rem;
+    border-width: 0px;
+}
+
+.modebar {
+    position: absolute !important;
+    top: 20px !important;
+    right: 60px !important;
+}
+
+.Plotly_Info_Div {
+    display: flex;
+    flex-direction: column;
+    background-color:white;
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+    
+    width: 15rem;
+    min-width: 15rem;
+    height: 100%;
+
+    margin: 0rem;
+    padding: 0rem;
+
+    border-color: black;    
+    border-style: solid;
+    border-radius: 0rem;
+    border-width: 0px;
+}
+
+.Plotly_Span_Title {
+    display: flex;
+    flex-direction: column;
+
+    margin-top: 1rem;;
+    padding: 0rem;
+    font-weight: bold;
+}
+
+.Plotly_Span_ChannelInfo {
+    display: flex;
+    flex-direction: column;
+
+    padding-top: 0.2rem;
+    padding-left: 0rem;
+    font-weight: bold;
+    white-space: pre-wrap; /* Preserves all spaces and line breaks in text */
+}
+
+.Plotly_Stat_Table {
+    margin-top: 0.5rem;
+    margin-left: 0rem;
+    width: calc(100% - 0.5rem);
+    height: fit-content;
+    background-color: white;
+}
+
+.Plotly_Stat_Body_Td_Right, .Plotly_Stat_Body_Td_Left {
+    text-align: right;
+    padding-left: 5px;
+    padding-right: 5px;
+    width: 10rem;
+    border: 1px solid var(--Channels_Table_Header_Border_Color);
+}
+
+.Plotly_Stat_Body_Td_Right_Red {
+    text-align: right;
+    padding-left: 5px;
+    padding-right: 5px;
+    width: 10rem;
+    border: 1px solid var(--Channels_Table_Header_Border_Color);
+    color: red;
+}
+
+.Plotly_Stat_Body_Td_Left {
+    text-align: left;
+    width: 5rem;
+}
+
+.Filter_Div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.Filter_Div_Span {
+    text-align: left;
+    white-space: pre-wrap; /* Preserves all spaces and line breaks in text */
+}
