@@ -1,0 +1,123 @@
+
+.Analysis_Menu_Container {
+    position: absolute;
+    top: calc(var(--header-height) + 0.2rem);
+    right: 0.3rem;
+
+    display: flex;
+    height: min(38rem, 100vh - var(--header-height) - 1.25rem );
+    width: min(26rem, 90%);
+
+    z-index: 1000;
+}
+
+.Analysis_Menu_ul {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+
+    background-color: var(--mainMenu-color);
+    border-radius: 2.0rem;
+    border-width: 0.05rem;
+    border-style: solid;
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+
+    width: 100%;
+    padding: 1.5rem;
+    margin: 0rem;
+}
+
+.Analysis_Menu_ul::-webkit-scrollbar {
+    display: none;
+}
+
+.Analysis_Menu_li {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
+    background-color: var(--mainMenu-li-color);
+    
+    border-radius: 1.5rem;
+    border-width: 0.2rem;
+    border-style: solid;
+    border-color: var(--mainMenu-li-border-color);
+
+    width: 6rem;
+    height: 7.5rem;
+    margin: 0.5rem 1.0rem 0.5rem 0.5rem;
+}
+
+.Analysis_Menu_li_a {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+
+    width: 100%;
+    text-decoration: none;
+}
+
+.Analysis_Menu_li:hover {
+    background-color: var(--mainMenu-li-hover-color);
+    box-shadow: 0px 0px 10px 10px var(--mainMenu-li-boxShadow-color);
+}
+
+.Analysis_Menu_li_Span {
+    width: fit-content; 
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.Analysis_Menu_li_a_Svg {
+    width: 100%;
+    padding-bottom: 0.5rem;
+}
+
+
+/* Mobile responsiveness for Analysis Menu */
+@media (max-width: 768px) {
+    .Analysis_Menu_Container {
+        height: min(28rem, 70vh);
+        width: min(20rem, 85%);
+        top: calc(var(--header-height) + 0.2rem);
+    }
+
+    .Analysis_Menu_ul {
+        padding: 1rem;
+    }
+
+    .Analysis_Menu_li {
+        width: 5rem;
+        height: 6.5rem;
+        margin: 0.4rem 0.6rem 0.4rem 0.4rem;
+    }
+
+    .Analysis_Menu_li_Span {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .Analysis_Menu_Container {
+        height: min(24rem, 65vh);
+        width: min(18rem, 90%);
+    }
+
+    .Analysis_Menu_ul {
+        padding: 0.75rem;
+    }
+
+    .Analysis_Menu_li {
+        width: 4.5rem;
+        height: 6rem;
+        margin: 0.3rem 0.5rem 0.3rem 0.3rem;
+    }
+
+    .Analysis_Menu_li_Span {
+        font-size: 0.75rem;
+    }
+}

@@ -1,0 +1,761 @@
+{
+  "title": "Seismic Data Analysis",
+  "intro": [
+    "This application offers a comprehensive set of analysis modules that allow users to load and analyse seismic data files with various formats from numerous data centers around the world.",
+    "The header toolbar provides four main controls: the <b>Run</b> button to start the current analysis, the <b>Analysis</b> button to switch between analysis modules, the <b>File</b> button to load various seismic data files, and the <b>Download</b> button to export analysis results as Excel files.",
+    "The sidebar on the left displays all loaded data files and their channels in a tree structure. Files can be expanded or collapsed to browse individual channels. Each channel has two checkboxes: the blue checkbox includes the channel in the current analysis, and the green checkbox toggles its graph on screen.",
+    "Right-clicking in the sidebar opens a right-click menu with four sections. Sidebar Options provides general controls such as selecting all channels for analysis, selecting the first 6 channels for plotting, expanding or collapsing files in the sidebar, expanding files in the channel table, and switching the table view. The remaining three sections allow batch selection of channels for analysis by Sampling Rate, Channel Type, and Channel Orientation — making it easy to quickly include specific subsets of channels across multiple files for analysis, without selecting them one by one."
+  ],
+  "sections": [
+    {
+      "id": "data",
+      "menuId": "MainMenu_LoadData",
+      "heading": "Data",
+      "icon": "waveform",
+      "summary": "Load seismic data files, inspect channel metadata and display time-history waveforms",
+      "intro": [
+        "The <b>Data</b> module is the entry point of the web application. It allows user to load multiple seismic data files at the same time and inspect the metadata of all loaded channels before proceeding to analysis. Supported file formats: <code>.vif</code>, <code>.txt</code>, <code>.v1</code>, <code>.v1c</code>, <code>.raw</code>, <code>.msd</code>, <code>.asc</code>, <code>.dat</code>.",
+        "Once data files are loaded, key metadata for each channel is displayed in a table including file name, channel number, record length, sampling rate, signal type, physical unit, scale factor, date and time, and azimuth orientation.",
+        "Three metadata fields are user-configurable directly in the table: <b>Signal Type</b>, <b>Physical Unit</b>, and <b>Scale Factor</b>. These can be adjusted after loading to correct metadata that was not embedded in the file or to override values that do not match the recording instrument.",
+        "Once data files are loaded, each channel is listed in the <b>Files &amp; Channels</b> sidebar tree on the left, where it can be selected for analysis and display. Use the blue checkbox next to each channel to include it in the analysis, and the green checkbox to toggle its graph on or off. Multiple channels can be selected for analysis and display simultaneously.",
+        "When the green checkbox for a channel is enabled, its time-history waveform is plotted in the graph panel below the channel table. Each graph is accompanied by a summary statistics table showing the Peak absolute value, Mean, RMS, and Residual of the signal, along with a Unit dropdown that allows the graph unit to be changed independently of the channel metadata. Multiple channels can be plotted simultaneously, with each appearing as a separate graph in the panel."
+      ],
+      "parameters": [ ]
+    },
+    {
+      "id": "filter",
+      "menuId": "MainMenu_Filter",
+      "heading": "Filter",
+      "icon": "filter",
+      "summary": "Apply baseline correction and digital filtering to the selected channels.",
+      "intro": [
+                "The <b>Filter</b> module applies baseline correction and digital filtering to the selected channels and is essential for removing DC offsets, trends, and unwanted frequency content from raw seismic waveforms. These two operations are applied in sequential order — baseline correction first, followed by filtering — and each can be skipped independently.",
+                "Baseline correction removes any DC offset or trend from the waveform before filtering, and offers four options. <b>Remove Mean</b> subtracts the mean value of the entire record, eliminating any constant offset. <b>Linear</b> fits and subtracts a 1st-order polynomial trend, <b>Quadratic</b> a 2nd-order, and <b>Cubic</b> a 3rd-order — use these when the waveform exhibits a gradual drift that cannot be adequately removed by mean subtraction alone. Baseline correction is implemented via least-squares polynomial fitting, where <b>Remove Mean</b> fits a 0th-order polynomial and the remaining options fit 1st-, 2nd-, and 3rd-order polynomials respectively; the fitted polynomial is subtracted from the waveform prior to filtering.",
+                "Three filter types are available: <b>Butterworth</b> attenuates frequencies outside the passband with a maximally flat magnitude response and no ripple. <b>Chebyshev</b> (Type I) achieves a steeper roll-off at the cost of passband ripple, controlled by the Maximum Ripple Size parameter. <b>Bessel</b> attenuates out-of-band frequencies while preserving the shape of the signal waveform through maximally flat group delay. For each filter type, three band configurations are available: <b>Low-Pass</b> retains frequencies below the cut-off frequency F1, <b>High-Pass</b> retains frequencies above F1, and <b>Band-Pass</b> retains frequencies between F1 and F2. The Filter Order controls the steepness of the roll-off, with higher orders producing a sharper transition between the passband and stopband, but greater phase distortion and potential numerical instability. All filters are designed as infinite impulse response (IIR) digital filters using the bilinear transformation with frequency pre-warping, which maps analogue prototype poles to the digital domain while preserving the specified cut-off frequency exactly.",
+                "The <b>Butterworth</b> filter provides a smooth, ripple-free response in the passband, meaning it does not distort the amplitude of the frequencies it retains. The cut-off frequency defines the −3 dB point, and the filter order controls the sharpness of the roll-off — a higher order produces a steeper transition but requires more computation. For Band-Pass filtering, two cut-off frequencies F1 and F2 define the lower and upper bounds of the retained frequency band. The prototype poles are uniformly distributed on the unit circle in the s-plane at angles <code>(2k+1)π/(2N)</code> for <code>k = 0, …, N−1</code>; after frequency scaling and the bilinear transformation, Low-Pass and High-Pass filters produce N poles and N zeros (at Nyquist for Low-Pass, at DC for High-Pass), and the Band-Pass variant doubles the filter order to 2N.",
+                "The <b>Chebyshev</b> (Type I) filter achieves a steeper roll-off than the Butterworth filter of the same order, transitioning more sharply between retained and attenuated frequencies. This comes at the cost of ripple in the passband — small oscillations in the amplitude response within the retained frequency range. The Maximum Ripple Size parameter controls the magnitude of these oscillations in decibels, with larger values producing a steeper roll-off but greater amplitude variation in the passband. The prototype poles lie on an ellipse in the s-plane, derived from the ripple factor <code>ε = √(10^(ε_dB/10) − 1)</code>; for even filter orders the DC gain equals <code>1/√(1+ε²)</code>, and for odd orders it is unity, resulting in equiripple behaviour in the passband and a monotonically decreasing response in the stopband.",
+                "The <b>Bessel</b> filter is designed to preserve the shape of the signal waveform by maintaining a constant time delay across all frequencies in the passband, a property known as maximally flat group delay. Unlike the Butterworth and Chebyshev filters, the Bessel filter prioritises phase linearity over roll-off steepness, making it the preferred choice when the timing and shape of the waveform are more important than sharp frequency separation. The analogue prototype is obtained from the reverse Bessel polynomials up to order 25, normalised so that the −3 dB point occurs at 1 rad/s; frequency scaling then maps this to the user-specified cut-off frequency prior to the bilinear transformation.",
+                "Once the <b>Run</b> button is clicked, the graph panel displays the raw and filtered waveforms overlaid for each selected channel, allowing direct visual comparison of the effect of baseline correction and filtering. The summary table alongside each graph shows the Peak absolute value, Mean, and RMS of the filtered signal, a Unit dropdown to change the graph unit, the applied baseline correction method, and the filter settings including type, band configuration, cut-off frequency, and whether Zero Phase filtering was enabled. The <b>Filter</b> toggle displays the filter magnitude and phase response on the graph, and the <b>FFT</b> toggle displays the Fourier amplitude spectrum of both the raw and filtered data for easy comparison.",
+                "When <b>Zero Phase Filtering</b> is enabled, the filter is applied forward and then in reverse using the <code>filtfilt</code> algorithm. This cancels all phase distortion and doubles the effective filter order. Initial filter states are set to zero for a clean startup transient."
+              ],
+      "parameters": [
+        {
+          "label": "Baseline Correction",
+          "id": "BaselineCorrection",
+          "options": [
+            "None",
+            "Remove Mean",
+            "Linear",
+            "Quadratic",
+            "Cubic"
+          ],
+          "default": "Remove Mean"
+        },
+        {
+          "label": "Filter Type",
+          "id": "FilterName",
+          "options": [
+            "None",
+            "Butterworth",
+            "Chebyshev",
+            "Bessel"
+          ],
+          "default": "Butterworth"
+        },
+        {
+          "label": "Filter Band",
+          "id": "FilterType",
+          "options": [
+            "Low-Pass",
+            "High-Pass",
+            "Band-Pass"
+          ],
+          "default": "High-Pass"
+        },
+        {
+          "label": "Filter Order",
+          "id": "FilterOrder",
+          "type": "integer",
+          "default": 4,
+          "range": "1 – 12"
+        },
+        {
+          "label": "Cut-off Frequency F1 (Hz)",
+          "id": "F1",
+          "type": "number",
+          "default": 1.5,
+          "description": "Lower cut-off frequency. Used as the sole cut-off for Low-Pass and High-Pass filters, and as the lower bound for Band-Pass."
+        },
+        {
+          "label": "Cut-off Frequency F2 (Hz)",
+          "id": "F2",
+          "type": "number",
+          "default": 4.0,
+          "description": "Upper cut-off frequency. Used only for Band-Pass filtering as the upper bound."
+        },
+        {
+          "label": "Maximum Ripple Size (dB)",
+          "id": "RippleSize",
+          "type": "number",
+          "default": 0.1,
+          "description": "Applies to the Chebyshev filter only. Defines the maximum allowable passband ripple in decibels. Larger values produce a steeper roll-off."
+        },
+        {
+          "label": "Zero Phase Filtering",
+          "id": "ZeroPhase",
+          "type": "checkbox",
+          "default": true,
+          "description": "Applies the filter twice — once forward and once backward — to eliminate phase distortion. This doubles the effective filter order."
+        }
+      ]
+    },
+    {
+      "id": "integral",
+      "menuId": "MainMenu_Integral",
+      "heading": "Integral",
+      "icon": "integral",
+      "summary": "Apply filtering and numerical double integration to the selected channels.",
+      "intro": [
+        "The <b>Integral</b> module performs numerical integration twice in sequence in the time domain on selected channels to compute the waveforms of the 1st and 2nd integrals. When the underlying channel is an acceleration record, the 1st integral yields the velocity waveform and the 2nd integral yields the displacement waveform. Integration is implemented using the trapezoidal rule applied as a causal IIR filter via the difference equation <code>y[n] = y[n−1] + 0.5·Δt·(x[n] + x[n−1])</code>, where <code>Δt = 1/FSamp</code> is the sampling interval, implemented in Direct Form II Transposed for numerical stability.",
+        "The quality of the integrated signals is directly dependent on the effectiveness of the preceding baseline correction and filtering. Low-frequency (long-period) noise that may be present in the signal will accumulate through the integration process and may produce unrealistic residual drift in the integrated waveforms. Therefore, baseline correction and filtering are applied once to the raw signal before the first integration, and then applied again to the 1st integral before the second integration — this two-stage conditioning suppresses the accumulation of low-frequency noise at each integration step independently.",
+        "If the residual drift — defined as the final sample of the integrated waveform — is unrealistically large, the user should consider adjusting the baseline correction method and/or filter cut-off frequency to better suppress long-period noise before re-running the integration. In practice, the residual displacement of the integrated waveform for long-distance recordings is expected to return close to zero at the end of the record, as the ground returns to rest after the shaking. A significant deviation from zero indicates that low-frequency noise has not been sufficiently removed by the applied baseline correction and/or filtering.",
+        "When the <b>Run</b> button is clicked, the graph panel displays the integrated waveforms for each selected channel. The <b>Select to Display</b> panel allows the user to switch between the original waveform, 1st integrated waveform, and 2nd integrated waveform — only one quantity can be displayed at a time.",
+        "The summary table alongside each graph shows the Peak absolute value, Mean, RMS, and Residual of the waveform on display, where Peak is the maximum absolute value, Mean is the arithmetic mean, RMS is the root-mean-square of the waveform samples, and Residual is the final sample value serving as a diagnostic indicator of residual drift. A <b>Unit</b> dropdown in the table allows the graph unit to be changed independently of the channel metadata. The table also shows the applied baseline correction method and the filter settings including type, band configuration, cut-off frequency, and whether zero-phase filtering was enabled. The <b>Filter</b> toggle plots the filter magnitude and phase response on the graph, and the <b>FFT</b> toggle displays the Fourier amplitude spectrum for the integrated waveform on display."
+        ],
+      "parameters": [
+        {
+          "label": "Original Signal",
+          "id": "Int_Acceleration",
+          "type": "toggle",
+          "default": true,
+          "description": "Display the original signal."
+        },
+        {
+          "label": "1st Integral",
+          "id": "Int_Velocity",
+          "type": "toggle",
+          "default": false,
+          "description": "Display the first numerical integral of the signal (e.g. velocity)."
+        },
+        {
+          "label": "2nd Integral",
+          "id": "Int_Displacement",
+          "type": "toggle",
+          "default": false,
+          "description": "Display the second numerical integral of the signal (e.g. displacement)."
+        }
+      ],
+      "details": [
+        "The <b>Integral</b> module converts raw time-history waveforms into cumulative engineering indices through discrete numerical integration. Before integration is performed, the raw signal is subjected to digital baseline correction and filtering to eliminate low-frequency drift and numerical trends that would otherwise compound into a parabolic error in the integrated output. The baseline correction removes mathematical artifacts up to a cubic polynomial trend from the time-series signal:",
+        "[math]\\text{Detrending Modes:}\\quad x_{\\text{corrected}}(t) = x_{\\text{raw}}(t) - \\sum_{k=0}^{P} c_k \\cdot t^k \\quad (P \\in \\{0, 1, 2, 3\\})[/math]",
+        "Digital IIR filtering can be applied in single-pass or forward-backward zero-phase configurations to limit the band-pass boundaries without introducing cumulative phase distortion:",
+        "[math]y[n] = \\frac{1}{a[0]} \\cdot \\left( \\sum_{i=0}^{M} b[i] \\cdot x[n-i] - \\sum_{j=1}^{N} a[j] \\cdot y[n-j] \\right)[/math]",
+        "The core numerical integration uses the cumulative trapezoidal method (<code>Cumtrapz</code>) to evaluate continuous integral bounds across uniform sampling intervals:",
+        "[math]v[n] = v[0] + \\sum_{i=1}^{n} \\frac{x[i-1] + x[i]}{2} \\cdot \\Delta t[/math]",
+        "For double integration (e.g., computing displacement from acceleration), the cumulative trapezoidal integration is performed sequentially on the baseline-corrected velocity waveform:",
+        "[math]d[n] = d[0] + \\sum_{i=1}^{n} \\frac{v[i-1] + v[i]}{2} \\cdot \\Delta t[/math]"
+      ]
+    },
+    {
+      "id": "sdof",
+      "menuId": "MainMenu_SDOF",
+      "heading": "SDOF",
+      "icon": "sdof",
+      "summary": "Compute the dynamic response of a Single Degree of Freedom (SDOF) oscillator subjected to the selected ground motion record.",
+      "intro": [
+        "The <b>SDOF</b> module computes the dynamic time-history response of a Single Degree of Freedom (SDOF) oscillator subjected to a harmonic excitation or selected acceleration channels . This module is valid only for underdamped SDOF systems (ξ < 1) and offers six analysis methods as follow:",
+        "[indent] <b>Free Vibration</b>: Computes the free oscillatory motion of an underdamped SDOF system. Free motion implies no external force acting on the system, and is possible only in the presence of an initial displacement and/or initial velocity. The response is governed by the <b>natural frequency</b> and <b>damping ratio</b>, and computed over the duration specified by <b>Record Duration</b> and <b>Sampling Interval</b>. The oscillatory response decays exponentially at a rate governed by the damping ratio.",
+        "[indent] <b>Forced Vibration</b>: Computes the total response of an underdamped SDOF system under a harmonic external force, defined by its <b>Excitation Amplitude</b> and <b>Excitation Frequency</b>. The total response consists of two parts: a transient component and a steady-state component. The transient component is governed by the SDOF parameters — <b>Natural Frequency</b> and <b>Damping Ratio</b> — and the initial displacement and/or initial velocity; it decays exponentially over time due to damping. Its amplitude and phase depend on both the SDOF parameters and the external force. The steady-state component, on the other hand, persists as long as the excitation continues, with its amplitude and phase determined by both the excitation and system parameters. Resonance occurs when the excitation frequency approaches the natural frequency, causing the steady-state amplitude to reach its maximum.",
+        "[indent] <b>Piece-Wise Exact module</b>: Computes the seismic time-history response of an underdamped SDOF system subjected to a base acceleration record, using the Piecewise Linear Exact Integration method (<b>Nigam & Jennings, 1969</b>). The method is unconditionally stable and introduces neither numerical damping nor period elongation, making it suitable for any time step relative to the natural period of the SDOF system.",
+        "[indent] <b>Central Difference</b>: Computes the seismic time-history response of an underdamped SDOF system using an explicit finite difference scheme: the displacement at each time step is calculated directly from known values at previous steps, requiring no matrix inversion and making the method computationally efficient per step. Velocity and acceleration of SDOF are approximated using central difference expressions of the displacement at adjacent time steps. Central Difference method exhibits slight period elongation whose error grows with increasing Δt/T. The method is conditionally stable and requires the time step to satisfy Δt ≤ T/π, where T is the natural period — violation of this condition leads to numerical instability and diverging results.",
+        "[indent] <b>Newmark Linear</b>: Computes the seismic time-history response of an underdamped SDOF system using the implicit Newmark time integration method (<b>Newmark, 1959</b>). Being an implicit method, the displacement at each time step is obtained by solving a system of equations that couples the current and previous time steps, requiring a matrix inversion but yielding improved stability. The method supports two schemes controlled by the integration parameters <b>α</b> and <b>β</b> and stability parameter <b>Δt/T</b> that can be set in Settings panel. The Average Acceleration Method ( <b>β = 1/4, α = 1/2</b>), which is unconditionally stable, and the Linear Acceleration Method (<b>β = 1/6, α = 1/2</b>), which is conditionally stable. When <b>α = 1/2</b>, no numerical damping is introduced. Values of <b>α > 1/2</b> introduce numerical damping that suppresses high-frequency noise at the cost of slight amplitude decay in the physical response. The stability parameter <b>Δt/T</b> of the input record should be kept small as large time steps <b>Δt</b> may still introduce period elongation and amplitude errors in the computed SDOF response.",
+        "[indent] <b>Newmark Non-Linear module</b>: Computes the inelastic seismic time-history response of an underdamped SDOF system using the implicit Newmark time integration method (<b>Newmark, 1959</b>) with a bilinear hysteresis model. As with the linear Newmark method, the Average Acceleration (<b>β = 1/4, α = 1/2</b>) and Linear Acceleration (<b>β = 1/6, α = 1/2</b>) schemes are supported, with the same stability and numerical damping characteristics. The bilinear model is defined by the <b>Yield Force</b> — the normalised force (force/weight) at which the system transitions from elastic to inelastic behaviour — and the <b>Post-Yield Hardening Ratio</b>, which defines the ratio of the post-yield stiffness to the initial elastic stiffness; a value of zero corresponds to an elastic-perfectly-plastic model. At each time step, equilibrium is satisfied iteratively using a Newton-Raphson procedure, with convergence controlled by the out-of-balance force tolerance and ductility convergence tolerance set in the Settings panel. To ensure integration accuracy, if the stability ratio <b>Δt/T</b> of the input record exceeds the maximum allowable value set in Settings, the record is automatically resampled by linear interpolation to satisfy the condition before integration — the output is then decimated back to the original time grid before returning.",
+        "When the <b>Run</b> button is clicked, the graph panel displays the computed SDOF response for the selected analysis type and for each selected channel. The <b>Select to Display</b> dropdown allows the user to switch between different SDOF response components such as displacement and velocity: only one quantity can be displayed at a time across all channels. For the <b>Forced Vibration</b> method, the steady-state and transient response components are additionally available for display alongside the total response.",
+        "The summary table alongside each graph shows the Peak absolute value, Mean, and RMS of the response quantity on display. The <b>Display</b> dropdown in the table allows the user to switch between different SDOF response components such as displacement, velocity, and acceleration responses for that specific channel, and the <b>Unit</b> dropdown allows the graph unit to be changed independently of the channel metadata. The table also shows the analysis method and, where applicable, the baseline correction method and filter settings including type, band configuration, cut-off frequency, and whether zero-phase filtering was enabled. The <b>FFT</b> toggle displays the Fourier amplitude spectrum of the response quantity currently on display."
+      ],
+      "parameters": [
+        {
+          "label": "Analysis Type",
+          "options": [
+            "Free Vibration",
+            "Forced Vibration",
+            "Piece-Wise Exact",
+            "Central Difference",
+            "Newmark Linear",
+            "Newmark Non-Linear"
+          ],
+          "default": "Newmark Linear",
+          "description": ""
+        },
+        {
+          "label": "Select to display",
+          "default": "None",
+          "description": "Choose which response quantity to display on the graph for all channels."
+        },
+        {
+          "label": "Frequency (Hz)",
+          "default": 0.5,
+          "description": "Natural frequency of the SDOF oscillator."
+        },
+        {
+          "label": "Damping Ratio",
+          "default": 0.05,
+          "description": "Viscous damping ratio ξ (dimensionless). A value of 0.05 corresponds to 5% critical damping."
+        },
+        {
+          "label": "Sampling Interval (s)",
+          "default": 0.01,
+          "description": "Time step Δt used for the numerical integration used only when Analysis Type is set to Free Vibration or Forced Vibration."
+        },
+        {
+          "label": "Record Duration (s)",
+          "default": 5.0,
+          "description": "Total duration of the output time history used only when Analysis Type is set to Free Vibration or Forced Vibration"
+        },
+        {
+          "label": "Initial Displacement",
+          "default": 0.0,
+          "description": "Initial displacement of the SDOF mass at t = 0."
+        },
+        {
+          "label": "Initial Velocity",
+          "default": 0.0,
+          "description": "Initial velocity of the SDOF mass at t = 0."
+        },
+        {
+          "label": "Harmonic Excitation Amplitude",
+          "default": 2.0,
+          "description": "Amplitude of the harmonic force used only when Analysis Type is set to Forced Vibration."
+        },
+        {
+          "label": "Harmonic Excitation Frequency (Hz)",
+          "default": 2.0,
+          "description": "Frequency of the harmonic force used only when Analysis Type is set to Forced Vibration."
+        },
+        {
+          "label": "Yield Force",
+          "default": 0.05,
+          "description": "Yield acceleration for the inelastic SDOF used only for Newmark Non-Linear analysis."
+        },
+        {
+          "label": "Post-Yield Hardening Ratio",
+          "default": 0.05,
+          "description": "Ratio of the post-yield stiffness to the initial elastic stiffness (α). A value of 0 corresponds to an elastic-perfectly-plastic model."
+        },
+        {
+          "label": "Unloading Stiffness Degradation",
+          "default": 0.2,
+          "description": "Controls the reduction in unloading stiffness as ductility demand increases used only for Clough degrading stiffness model. A value of 0 gives no degradation (bilinear model)."
+        }
+      ],
+      "details":[
+
+        "The <b>SDOF</b> module solves the dynamic equation of motion for a single-degree-of-freedom system subjected to either external harmonic forces or seismic base excitation:",
+        "[math]m\\ddot{u}(t) + c\\dot{u}(t) + f_s(u, t) = p(t)[/math]",
+        "Where [math]m[/math] is the mass, [math]c[/math] is the viscous damping coefficient, [math]f_s(u, t)[/math] is the internal restoring force (linear or hysteretic), and [math]p(t)[/math] is the dynamic excitation. For seismic base acceleration [math]\\ddot{u}_g(t)[/math], the effective force is [math]p(t) = -m \\cdot \\ddot{u}_g(t)[/math]. Dividing by [math]m[/math] normalises the governing equation:",
+        "[math]\\ddot{u}(t) + 2\\xi\\cdot\\omega_n\\cdot\\dot{u}(t) + \\frac{f_s(u, t)}{m} = -\\ddot{u}_g(t)[/math]",
+        "Where [math]\\omega_n = \\sqrt{k/m} = 2\\pi f_n[/math] is the natural angular frequency, and [math]\\xi = c/(2\\sqrt{km})[/math] is the dimensionless viscous damping ratio ([math]\\xi < 1[/math] for underdamped systems).",
+        " ",
+
+        "<b>1. Free & Forced Harmonic Vibration</b>",
+        "For <b>Free Vibration</b> ([math]p(t)=0[/math]), the analytical solution for an underdamped system under initial displacement [math]u(0) = u_0[/math] and velocity [math]\\dot{u}(0) = \\dot{u}_0[/math] is evaluated at discrete time steps [math]t = n\\Delta t[/math]:",
+        "[math]u(t) = e^{-\\xi\\omega_n t} \\cdot \\left( u_0 \\cdot \\cos(\\omega_d \\cdot t) + \\frac{\\dot{u}_0 + \\xi \\cdot \\omega_n \\cdot u_0}{\\omega_d} \\sin(\\omega_d \\cdot t) \\right)[/math]",
+        "Where [math]\\omega_d = \\omega_n\\sqrt{1-\\xi^2}[/math] represents the damped natural frequency.",
+        "For <b>Forced Vibration</b> under harmonic excitation [math]p(t) = p_0 \\sin(\\omega \\cdot t)[/math], the solution superimposes the exponentially decaying transient response and the steady-state harmonic response:",
+        "[math]u(t) = \\underbrace{A \\cdot e^{-\\xi \\cdot \\omega_n \\cdot t} \\cos(\\omega_d \\cdot t) + B \\cdot e^{-\\xi \\cdot \\omega_n \\cdot t} \\sin(\\omega_d \\cdot t)}_{\\text{Transient Component}} + \\underbrace{U_0 \\cdot \\sin(\\omega \\cdot t - \\theta)}_{\\text{Steady-State Component}}[/math]",
+        "Where the steady-state amplitude [math]U_0[/math] and phase angle [math]\\theta[/math] are expressions of the frequency ratio [math]\\beta_{freq} = \\omega/\\omega_n[/math]:",
+        "[math]U_0 = \\frac{p_0/k}{\\sqrt{(1-\\beta_{freq}^2)^2 + (2\\cdot\\xi\\cdot\\beta_{freq})^2}}, \\quad \\theta = \\tan^{-1}\\left(\\frac{2\\cdot\\xi\\cdot\\beta_{freq}}{1-\\beta_{freq}^2}\\right)[/math]",
+        "The integration constants [math]A[/math] and [math]B[/math] are explicitly solved from the boundaries [math]u(0)[/math] and [math]\\dot{u}(0)[/math] to capture the true total response.",
+        " ",
+
+        "<b>2. Piece-Wise Exact Method (Nigam & Jennings, 1969)</b>",
+        "For discrete seismic records, the base acceleration [math]\\ddot{u}_g(t)[/math] is assumed to vary linearly within each sampling interval [math][t_n, t_{n+1}][/math] of duration [math]\\Delta t[/math]:",
+        "[math]\\ddot{u}_g(t) = \\ddot{u}_g(t_n) + \\frac{\\Delta \\ddot{u}_g}{\\Delta t}(t - t_n), \\quad \\Delta \\ddot{u}_g = \\ddot{u}_g(t_{n+1}) - \\ddot{u}_g(t_n)[/math]",
+        "Substituting this linear function into Duhamel's integral yields an exact closed-form recurrence relationship mapping state vectors from step [math]n[/math] to [math]n+1[/math]:",
+        "[math]\\begin{bmatrix} u_{n+1} \\\\ \\dot{u}_{n+1} \\end{bmatrix} = \\mathbf{A}\\cdot(\\Delta t, \\omega_n, \\xi) \\begin{bmatrix} u_n \\\\ \\dot{u}_n \\end{bmatrix} + \\mathbf{B}\\cdot(\\Delta t, \\omega_n, \\xi) \\begin{bmatrix} \\ddot{u}_g(t_n) \\\\ \\ddot{u}_g(t_{n+1}) \\end{bmatrix}[/math]",
+        "The coefficients within matrices [math]\\mathbf{A}[/math] and [math]\\mathbf{B}[/math] are exact analytical derivations free of period elongation or algorithmic energy dissipation, rendering this scheme unconditionally stable for linear elastic analysis.",
+        " ",
+
+        "<b>3. Central Difference Method</b>",
+        "The <b>Central Difference</b> approach is an explicit integration scheme where the derivatives at step [math]n[/math] are approximated using central finite differences of displacement across adjacent boundaries:",
+        "[math]\\dot{u}_n = \\frac{u_{n+1} - u_{n-1}}{2\\Delta t}, \\quad \\ddot{u}_n = \\frac{u_{n+1} - 2u_n + u_{n-1}}{\\Delta t^2}[/math]",
+        "Substituting these approximations into the dynamic equilibrium equation at step [math]n[/math] leads to a direct algebraic calculation for the next displacement [math]u_{n+1}[/math] without requiring matrix inversion:",
+        "[math]\\left( \\frac{m}{\\Delta t^2} + \\frac{c}{2\\Delta t} \\right) u_{n+1} = p_n - \\left( k - \\frac{2m}{\\Delta t^2} \\right) u_n - \\left( \\frac{m}{\\Delta t^2} - \\frac{c}{2\\Delta t} \\right) u_{n-1}[/math]",
+        "The explicit solution requires an initialized virtual step [math]u_{-1} = u_0 - \\Delta t \\dot{u}_0 + \\frac{\\Delta t^2}{2}\\ddot{u}_0[/math]. This method is conditionally stable and will yield diverging, unstable results unless the time increment meets the strict stability criterion: [math]\\Delta t \\le T_n/\\pi[/math].",
+
+        "<b>4. Newmark Time Integration Methods (Linear & Non-Linear)</b>",
+        "The implicit <b>Newmark</b> family of algorithms establishes Taylor series expansions for velocity and displacement at step [math]n+1[/math] controlled by quadrature weights [math]\\alpha[/math] and [math]\\beta[/math]:",
+        "[math]\\dot{u}_{n+1} = \\dot{u}_n + (1-\\alpha)\\cdot\\Delta t \\cdot \\ddot{u}_n + \\alpha \\cdot \\Delta t \\cdot \\ddot{u}_{n+1}[/math]",
+        "[math]u_{n+1} = u_n + \\Delta t \\cdot \\dot{u}_n + \\left(\\frac{1}{2}-\\beta\\right) \\cdot \\Delta t^2  \\cdot \\ddot{u}_n + \\beta \\cdot \\Delta t^2  \\cdot \\ddot{u}_{n+1}[/math]",
+        "For <b>Newmark Linear</b> systems, these equations are reformulated to yield an effective static stiffness [math]\\hat{k}[/math] and effective force increment [math]\\Delta \\hat{p}[/math]:",
+        "[math]\\hat{k} = k + \\frac{\\alpha}{\\beta \\cdot \\Delta t} \\cdot c + \\frac{1}{\\beta \\cdot \\Delta t^2} \\cdot m, \\quad \\Delta u = \\frac{\\Delta \\hat{p}}{\\hat{k}}[/math]",
+        "The method introduces no numerical damping when [math]\\alpha = 0.5[/math].",
+        "It is unconditionally stable if [math]\\beta \\ge 0.25(\\alpha + 0.5)^2[/math]",
+        "The default configuration ([math]\\alpha = 0.5, \\beta = 0.25[/math]) corresponds to the unconditionally stable Constant Average Acceleration scheme.",
+        "For <b>Newmark Non-Linear</b> systems, the restoring force is hysteretic: [math]f_s(u, t) = f_s(u_{n+1})[/math]. The system updates structural stiffness based on a bilinear hysteretic model governed by initial stiffness [math]k_i[/math], yield force [math]f_y[/math], and post-yield hardening ratio [math]\\alpha_{post}[/math]:",
+        "[math]k_{t} = \\begin{cases} k_i & \\text{if elastic/unloading} \\\\ \\alpha_{post} \\cdot k_i & \\text{if yielded} \\end{cases}[/math]",
+        "Because [math]f_s(u_{n+1})[/math] depends nonlinearly on the unknown displacement, an iterative Newton-Raphson loop is executed at each time step [math]n+1[/math]. The residual out-of-balance dynamic force vector [math]R[/math] is updated iteratively until convergence parameters are satisfied:",
+        "[math]R = p_{n+1} - m\\ddot{u}_{n+1}^{(i)} - c\\dot{u}_{n+1}^{(i)} - f_s(u_{n+1}^{(i)})[/math]",
+        "[math]\\Delta u^{(i)} = \\frac{R}{\\hat{k}_t^{(i)}}, \\quad u_{n+1}^{(i+1)} = u_{n+1}^{(i)} + \\Delta u^{(i)}[/math]",
+        "Iterations continue until [math]|R| < \\text{Tolerance}_{force}[/math] and the convergence profile matches the specified target ductility parameters."
+
+       ]
+    },
+    {
+      "id": "response",
+      "menuId": "MainMenu_ResSpec",
+      "heading": "Response Spectrum",
+      "icon": "spectrum",
+      "summary": "Compute elastic or constant-ductility inelastic response spectra from the selected ground motion record.",
+      "intro": [
+                  "A <b>Response Spectrum</b> summarises the peak response of a Single Degree of Freedom (SDOF) oscillator — characterised by its natural period <b>T</b> and damping ratio <b>ξ</b> — subjected to a base acceleration excitation.",
+                  "The <b>Response Spectrum</b> module supports multiple spectrum types: elastic and constant-ductility inelastic response spectra computed from the selected acceleration channels over a user-defined period range, governed by the <b>Minimum Period</b>, <b>Period Step</b>, and <b>Maximum Period</b> parameters. For elastic spectra, up to four damping ratios can be specified per channel; for inelastic spectra, up to four constant-ductility levels can be specified per channel.",
+                  "[indent] <b>Elastic Response Spectra</b>: Computes the peak elastic response of an underdamped SDOF system over the user-defined period range. For each oscillator period, the equation of motion <b>ẍ + 2ξω ẋ + ω²x = −ẍg(t)</b> is integrated using the <b>Piecewise Linear Exact Integration</b> method (Nigam & Jennings, 1969), which is unconditionally stable and introduces neither numerical damping nor period elongation. Up to four damping ratios can be specified simultaneously, producing a family of curves that illustrates how increased damping reduces spectral ordinates across all periods.",
+                  "[indent] <b>Constant-Ductility Inelastic Spectra</b>: Computes the inelastic response spectra at specified constant target ductility levels by replacing the elastic restoring force with a nonlinear hysteretic force–deformation model. Two hysteretic rules are supported: a <b>Bilinear Hysteretic Model</b> defined by a <b>Post-yield Hardening Ratio</b> (ratio of post-yield to initial stiffness; a value of zero corresponds to an elastic-perfectly-plastic model); and a <b>Clough Degrading-Stiffness Model</b> defined by <b>Unloading Stiffness Degradation</b> and <b>Post-yield Hardening Ratio</b> that accounts for stiffness reduction upon load reversal, representative of reinforced concrete behaviour. At each period, the yield strength is iterated until the resulting ductility demand <b>μ = u<sub>max</sub> / u<sub>y</sub></b> matches the specified target ductility. Up to four constant-ductility levels can be computed and overlaid, directly revealing how inelastic deformation capacity reduces the required strength relative to the elastic spectrum.",
+                  "Signal conditioning is applied to each selected channel where applicable before spectrum computation. A baseline correction method — such as mean removal or polynomial fitting — removes DC offset and long-period drift, while an optional digital Butterworth filter (high-pass, low-pass, or band-pass) suppresses noise outside the frequency band of interest. Zero-phase filtering can be enabled to eliminate phase distortion. These pre-processing steps ensure that spectral ordinates are not contaminated by instrumentation noise or baseline errors, which is especially critical at long periods where drift errors accumulate.",
+                  "When the <b>Run</b> button is clicked, the graph panel displays the computed response spectra for the selected spectrum type and for each selected channel. The <b>Select to Display</b> dropdown allows the user to switch between spectral quantities — spectral acceleration, spectral velocity, and spectral displacement — with only one quantity displayed at a time across all channels.",
+                  "The summary table alongside each graph shows the <b>Spectrum Method</b> used for the analysis, a <b>Display</b> dropdown to switch between different spectral quantities — displacement, velocity, and acceleration — for that specific channel, and a <b>Unit</b> dropdown to change the display unit independently of the channel metadata. The table also shows the baseline correction method applied and the filter settings — including filter type, band configuration, cut-off frequency, and whether zero-phase filtering was enabled — with a toggle to enable or disable the display of the filter response."
+              ],
+      "parameters": [
+        {
+          "label": "Spectrum Type",
+          "options": [
+            "Elastic Spectra",
+            "Constant-Ductility Inelastic Spectra (Bilinear hysteretic mode)",
+            "Constant-Ductility Inelastic Spectra (Clough degrading-stiffness model)"
+          ],
+          "default": "Elastic Spectra",
+          "description": "Computes response spectrum for a SDOF oscillators across the specified period range."
+        },
+        {
+          "label": "Select to display",
+          "default": "None",
+          "description": "Choose which spectral quantity to display."
+        },
+        {
+          "label": "Minimum Period (s)",
+          "default": 0.1,
+          "description": "Start of the period range for spectral computation."
+        },
+        {
+          "label": "Period Step (s)",
+          "default": 0.1,
+          "description": "Increment between successive periods. Smaller values produce a smoother spectrum but increase computation time."
+        },
+        {
+          "label": "Maximum Period (s)",
+          "type": "number",
+          "default": 4.0,
+          "description": "End of the period range for spectral computation."
+        },
+        {
+          "label": "Post-Yield Hardening Ratio",
+          "default": 0.05,
+          "description": "Ratio of the post-yield stiffness to the initial elastic stiffness for the bilinear hysteretic model."
+        },
+        {
+          "label": "Unloading Stiffness Degradation",
+          "default": 0.2,
+          "description": "Used for the Clough inelastic model. Controls degradation of unloading stiffness with increasing ductility demand."
+        },
+        {
+          "label": "Damping Ratio Count",
+          "default": 1,
+          "description": "Number of damping ratio values to include. Up to four curves can be plotted simultaneously (<b>ξ₁</b> through <b>ξ₄</b>)."
+        },
+        {
+          "label": "Damping Ratios ξ₁ – ξ₄",
+          "defaults": 0.01,
+          "description": "Viscous damping ratio value for each spectrum curve. Common values: 0.02 (steel), 0.05 (reinforced concrete), 0.10 (heavily damped structures)."
+        },
+        {
+          "label": "Ductility Count",
+          "default": 1,
+          "description": "Number of target ductility values for inelastic spectra. Up to four curves (<b>μ₁</b> through <b>μ₄</b>)."
+        },
+        {
+          "label": "Constant Ductility μ₁ – μ₄",
+          "defaults": 1.5,
+          "description": "Target displacement ductility ratio for constant-ductility inelastic spectra. <b>μ = 1</b> corresponds to the elastic spectrum."
+        }
+      ],
+      "details": [
+        "The <b>Response Spectrum</b> module characterizes the peak engineering demand parameters of an array of Single Degree of Freedom (SDOF) oscillators across a specified period band [math][T_{\\text{min}}, T_{\\text{max}}][/math] under base acceleration [math]\\ddot{u}_g(t)[/math]. The governing equation for any individual oscillator of period [math]T[/math] and damping ratio [math]\\xi[/math] is:",
+        "[math]\\ddot{u}(t) + 2\\xi\\cdot\\omega\\cdot\\dot{u}(t) + \\frac{f_s(u, t)}{m} = -\\ddot{u}_g(t)[/math]",
+        "Where [math]\\omega = 2\\pi/T[/math] is the natural circular frequency, [math]u(t)[/math] is the relative displacement response, and [math]f_s(u, t)[/math] is the internal restoring force. Spectral quantities are the maximized absolute responses across the total time domain [math]t[/math]:",
+        "[math]\\text{Spectral Displacement:}\\quad S_d(T, \\xi) = \\max_t |u(t)|[/math]",
+        "[math]\\text{Pseudo-Spectral Velocity:}\\quad S_{pv}(T, \\xi) = \\omega \\cdot S_d(T, \\xi)[/math]",
+        "[math]\\text{Pseudo-Spectral Acceleration:}\\quad S_a(T, \\xi) = \\omega^2 \\cdot S_d(T, \\xi)[/math]",
+        "The true absolute spectral acceleration [math]S_A(T, \\xi) = \\max_t |\\ddot{u}(t) + \\ddot{u}_g(t)|[/math] converges mathematically to the pseudo-spectral acceleration [math]S_a[/math] for structures with low-to-moderate damping ratios.",
+
+        "<b>1. Elastic Spectral Computation (Nigam & Jennings, 1969)</b>",
+        "For elastic spectra, the system remains linear ([math]f_s(u, t)/m = \\omega^2 \\cdot u[/math]). The response is computed step-by-step using the Piecewise Linear Exact Integration method. Assuming the base excitation [math]\\ddot{u}_g(t)[/math] varies linearly over the interval [math]\\Delta t = t_{n+1} - t_n[/math]:",
+        "[math]\\ddot{u}_g(t) = \\ddot{u}_g(t_n) + \\frac{\\ddot{u}_g(t_{n+1}) - \\ddot{u}_g(t_n)}{\\Delta t}\\cdot(t - t_n)[/math]",
+        "The exact state vector evaluation at step [math]n+1[/math] is governed by the recurrence matrix relation:",
+        "[math]\\begin{bmatrix} u_{n+1} \\\\ \\dot{u}_{n+1} \\end{bmatrix} = \\begin{bmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{bmatrix} \\cdot \\begin{bmatrix} u_n \\\\ \\dot{u}_n \\end{bmatrix} + \\begin{bmatrix} b_{11} & b_{12} \\\\ b_{21} & b_{22} \\end{bmatrix} \\cdot \\begin{bmatrix} \\ddot{u}_g(t_n) \\\\ \\ddot{u}_g(t_{n+1}) \\end{bmatrix}[/math]",
+        "Where coefficients [math]a_{ij}[/math] and [math]b_{ij}[/math] are exact analytical derivations of [math]\\omega[/math], [math]\\xi[/math], and [math]\\Delta t[/math]. This eliminates artificial period elongation or numerical damping, guaranteeing absolute precision across high-frequency components (short periods).",
+
+        "<b>2. Constant-Ductility Inelastic Spectra</b>",
+        "Inelastic spectral response replaces the linear spring with a nonlinear hysteretic force–deformation rule. The target parameter is the displacement ductility ratio [math]\\mu = u_{\\text{max}} / u_y[/math], where [math]u_y[/math] is the structural yield displacement. For a target ductility [math]\\mu_{\\text{target}} > 1[/math], the required yield strength coefficient [math]C_y = f_y / (m \\cdot g)[/math] must be found iteratively at each period step.",
+        "An inner Newmark non-linear integration loop computes [math]u_{\\text{max}}[/math] for an assumed trial yield strength [math]f_y[/math]. The resulting ductility [math]\\mu_{\\text{calc}} = u_{\\text{max}}/u_y[/math] is checked against the target [math]\\mu_{\\text{target}}[/math]. The yield strength is adjusted using a root-finding algorithm (e.g., Secant or Secant-Bisection hybrid method):",
+        "[math]f_y^{(k+1)} = f_y^{(k)} - \\frac{\\mu^{(k)} - \\mu_{\\text{target}}}{\\frac{\\mu^{(k)} - \\mu^{(k-1)}}{f_y^{(k)} - f_y^{(k-1)}}}[/math]",
+        "Iterations continue until [math]|\\mu_{\\text{calc}} - \\mu_{\\text{target}}| \\le \\text{Tolerance}_{\\text{ductility}}[/math] as specified in the global settings.",
+
+        "<b>3. Hysteretic Restoring Force Models</b>",
+        "The <b>Bilinear Hysteretic Model</b> represents elastic-plastic behavior with post-yield stiffness modification. The instantaneous tangent stiffness [math]k_t = \\partial f_s / \\partial u[/math] transitions between the initial elastic stiffness [math]k_i[/math] and the post-yield tracking stiffness governed by the post-yield hardening ratio [math]\\alpha_{\\text{post}}[/math]:",
+        "[math]k_t = \\begin{cases} k_i & \\text{if } |f_s| < f_y \\text{ or loading opposes sign of velocity} \\\\ \\alpha_{\\text{post}} \\cdot k_i & \\text{if yielded and loading continues} \\end{cases}[/math]",
+        "The <b>Clough Degrading-Stiffness Model</b> introduces a modification to simulate physical stiffness degradation during cyclic loading, a characteristic typical of reinforced concrete components. Upon a load reversal across the zero-force axis, the unloading/re-loading stiffness paths do not point parallel to the original elastic slope. Instead, the model targets the maximum historical displacement point reached in the direction of loading:",
+        "[math]k_{\\text{degraded}} = k_i \\cdot \\left( \\frac{u_y}{|u_{\\text{max, hist}}|} \\right)^{\\alpha_{\\text{deg}}}[/math]",
+        "Where [math]\\alpha_{\\text{deg}}[/math] represents the <b>Unloading Stiffness Degradation</b> parameter. This reduction in cyclic loop area leads to distinct energy dissipation profiles, tracking a higher residual displacement compared to stable bilinear systems."
+      ]
+    },
+    {
+      "id": "spectrum",
+      "menuId": "MainMenu_Spectrum",
+      "heading": "Spectrum",
+      "icon": "fft",
+      "summary": "Compute frequency-domain representations of the selected channels, including Fourier amplitude, power spectrum, power spectral density, and spectrogram.",
+      "intro": [
+        "The <b>Spectrum</b> module computes four frequency-domain representations of the selected channels, enabling the identification of dominant frequencies, energy distribution, signal periodicity, and the time-varying evolution of spectral content. All four representations are derived from the same conditioned signal — baseline-corrected and filtered as specified in the left panel — ensuring consistency across display modes.",
+        "The four representations available in the <b>Select to Display</b> dropdown are the <b>Fourier Amplitude Spectrum</b>, the <b>Power Spectrum</b>, the <b>Spectral Density Spectrum</b> (Power Spectral Density, estimated using Welch's method), and the <b>Spectrogram</b>. The first two operate on the full record as a single block; the latter two subdivide the record into overlapping segments, making the <b>Window Length</b> and <b>Overlap Ratio</b> parameters relevant only for those representations.",
+        "Signal conditioning is applied to each selected channel before spectral computation. A baseline correction method — such as mean removal or polynomial fitting — removes DC offset and long-period drift, and an optional digital filter suppresses noise outside the frequency band of interest. These steps are particularly important for spectral analysis: any residual DC offset introduces energy at zero frequency, and low-frequency drift inflates the low-frequency end of the spectrum, potentially masking the true signal content. It is recommended to run the <b>Filter</b> module and verify the conditioned waveform before computing the spectrum.",
+        "[indent] <b>Fourier Amplitude Spectrum</b>: The Fourier Amplitude Spectrum (FAS) is computed as the magnitude of the discrete Fourier transform of the conditioned signal over the full record length. It reveals the frequency content of the entire record as a single global estimate, with frequency resolution determined by the record duration: <b>Δf = 1 / T<sub>rec</sub></b>, where <b>T<sub>rec</sub></b> is the total record length in seconds. The FAS is a one-sided spectrum returned over the positive frequency range from zero to the Nyquist frequency <b>f<sub>N</sub> = F<sub>s</sub> / 2</b>, where <b>F<sub>s</sub></b> is the sampling frequency. The predominant period of the record can be identified from the peak of the FAS.",
+        "[indent] <b>Power Spectrum</b>: The Power Spectrum is computed as the squared Fourier amplitude normalised by the transform length: <b>P(f) = |X(f)|² / N</b>, where <b>X(f)</b> is the discrete Fourier transform of the signal and <b>N</b> is the number of samples. This representation is proportional to the signal energy at each frequency and is useful for identifying the dominant frequency components by their energy contribution. Like the FAS, the Power Spectrum is a global estimate computed over the full record without windowing or averaging.",
+        "[indent] <b>Spectral Density Spectrum (PSD)</b>: The Power Spectral Density (PSD) is estimated using <b>Welch's method</b> (Welch, 1967). The signal is divided into overlapping segments of length governed by the <b>Window Length</b> parameter; each segment is multiplied by a tapering window (Hamming or Rectangular, as selected) to reduce spectral leakage from segment edges; the periodogram of each windowed segment is computed; and the periodograms are averaged across all segments to yield a statistically stable estimate. The one-sided PSD is normalised so that its integral over the positive frequency axis equals the mean-square value of the signal, consistent with Parseval's theorem. The PSD has units of [signal unit]²/Hz and is the preferred representation when a stable, smooth estimate of signal energy per unit frequency is required — for example, when characterising the frequency content of ambient noise or comparing spectral levels across channels.",
+        "[indent] <b>Spectrogram</b>: The Spectrogram visualises how the frequency content of the signal evolves over time. It is computed using a Short-Time Fourier Transform (STFT): the signal is divided into overlapping segments using the same windowing parameters as the PSD, and the Fourier amplitude of each segment is computed and arranged as a column in a two-dimensional time–frequency matrix. The result is displayed as a colour map with time on the horizontal axis, frequency on the vertical axis, and amplitude encoded by colour. The Spectrogram is particularly useful for identifying non-stationary behaviour, such as the arrival of body and surface waves at different times, resonance build-up and decay, and transient noise events that would be averaged out in a global spectral estimate.",
+        "When the <b>Run</b> button is clicked, the selected spectral representation is computed and displayed for each selected channel. The <b>Select to Display</b> dropdown at the top of the parameter panel applies globally across all channels, switching all graphs simultaneously. The summary table alongside each graph shows the applied <b>Baseline</b> correction method, the filter settings including type, band configuration, cut-off frequency, and whether zero-phase filtering was enabled, as well as a <b>Display</b> dropdown and a <b>Unit</b> dropdown that allow the representation and display unit to be changed for that individual channel without re-running the analysis.",
+        "References:",
+        "[indent] [1] Welch, P.D. (1967). The use of fast Fourier transform for the estimation of power spectra: a method based on time averaging over short, modified periodograms. <i>IEEE Transactions on Audio and Electroacoustics</i>, 15(2), 70–73.",
+        "[indent] [2] Cooley, J.W., Tukey, J.W. (1965). An algorithm for the machine calculation of complex Fourier series. <i>Mathematics of Computation</i>, 19(90), 297–301.",
+        "[indent] [3] Harris, F.J. (1978). On the use of windows for harmonic analysis with the discrete Fourier transform. <i>Proceedings of the IEEE</i>, 66(1), 51–83."
+      ],
+      "parameters": [
+        {
+          "label": "Select to display",
+          "id": "Spectrum_SelectToDisplay",
+          "options": [
+            "Fourier Amplitude Spectrum",
+            "Power Spectrum",
+            "Spectral Density Spectrum",
+            "Spectrogram"
+          ],
+          "description": "Selects the frequency-domain representation to display across all channel graphs simultaneously. <b>Fourier Amplitude Spectrum</b>: magnitude of the FFT of the full conditioned record. <b>Power Spectrum</b>: squared FFT magnitude normalised by record length, proportional to signal energy at each frequency. <b>Spectral Density Spectrum (PSD)</b>: power per unit frequency estimated by Welch's method — statistically smoothed and suitable for comparing spectral levels. <b>Spectrogram</b>: time-varying frequency content computed by a Short-Time Fourier Transform (STFT) and displayed as a time–frequency colour map."
+        },
+        {
+          "label": "Window Length (s)",
+          "id": "WindowLength",
+          "type": "number",
+          "default": 15,
+          "description": "Duration of each segment used in Welch's PSD estimate and the Spectrogram. A longer window increases frequency resolution (<b>Δf = 1 / Window Length</b>) but yields fewer segments to average over, reducing the statistical stability of the PSD estimate. A shorter window improves temporal resolution in the Spectrogram at the cost of coarser frequency resolution. This parameter has no effect on the Fourier Amplitude Spectrum or Power Spectrum, which are computed over the full record length."
+        },
+        {
+          "label": "Overlap Ratio",
+          "id": "OverlapRatio",
+          "type": "number",
+          "default": 0.25,
+          "range": "0 – < 1",
+          "description": "Fractional overlap between successive segments for the PSD and Spectrogram. A value of 0 means no overlap. Higher overlap (e.g. 0.75) increases the number of segments that are averaged, smoothing the PSD estimate and improving temporal continuity in the Spectrogram, at the cost of greater computational effort. This parameter has no effect on the Fourier Amplitude Spectrum or Power Spectrum."
+        },
+        {
+          "label": "Smoothing Window Type",
+          "id": "Spectrum_SmoothingWindow",
+          "options": [
+            "Hamming",
+            "Rectangular"
+          ],
+          "default": "Hamming",
+          "description": "Tapering window applied to each segment before computing its periodogram, used for the PSD and Spectrogram only. <b>Hamming</b>: reduces spectral leakage by tapering the segment edges to near-zero — recommended for most seismic signals, where the signal is not guaranteed to be periodic within each segment. <b>Rectangular</b>: applies no tapering, giving the highest frequency resolution but significant sidelobe leakage that can mask low-amplitude spectral peaks adjacent to dominant ones."
+        }
+      ],
+      "details": [
+        "The <b>Fourier Amplitude Spectrum</b> is computed via the Discrete Fourier Transform (DFT), evaluated efficiently using the Fast Fourier Transform (FFT) algorithm. For a discrete time series \\( x[n] \\), \\( n = 0, 1, \\dots, N-1 \\), sampled at interval \\( \\Delta t \\), the DFT is:",
+        "[math]X[k] = \\sum_{n=0}^{N-1} x[n]\\, e^{-j 2\\pi k n / N}, \\quad k = 0, 1, \\dots, N-1[/math]",
+        "The one-sided Fourier Amplitude Spectrum is the magnitude \\( |X[k]| \\) for \\( k = 0, 1, \\dots, \\lfloor N/2 \\rfloor \\), with the corresponding frequency axis \\( f_k = k / (N \\Delta t) \\) spanning from 0 Hz to the Nyquist frequency \\( f_N = F_s / 2 \\). Frequency resolution is \\( \\Delta f = 1 / T_{\\text{rec}} = 1 / (N \\Delta t) \\), determined solely by the record duration.",
+        "The <b>Power Spectrum</b> is defined as the squared Fourier amplitude normalised by the transform length:",
+        "[math]P[k] = \\frac{|X[k]|^2}{N}[/math]",
+        "This normalisation ensures that the sum of the one-sided Power Spectrum (with the DC and Nyquist terms counted once, and all other terms doubled) equals the mean-square value of the signal, in accordance with Parseval's theorem.",
+        "The <b>Power Spectral Density</b> is estimated using <b>Welch's method</b> (Welch, 1967). The signal of length \\( N \\) is divided into \\( K \\) overlapping segments each of length \\( L \\) samples, with successive segments offset by \\( L(1 - r) \\) samples, where \\( r \\) is the <b>Overlap Ratio</b>. Each segment \\( x_k[n] \\), \\( n = 0, \\dots, L-1 \\), is multiplied by a normalised window \\( w[n] \\) (Hamming or Rectangular):",
+        "[math]\\hat{x}_k[n] = w[n]\\, x_k[n][/math]",
+        "The periodogram of each windowed segment is computed as:",
+        "[math]I_k[j] = \\frac{1}{F_s\\, U} \\left| \\sum_{n=0}^{L-1} \\hat{x}_k[n]\\, e^{-j 2\\pi j n / L} \\right|^2[/math]",
+        "where \\( U = \\frac{1}{L} \\sum_{n=0}^{L-1} w^2[n] \\) is the window normalisation factor that compensates for the energy reduction introduced by tapering. The Welch PSD estimate is the average of the \\( K \\) segment periodograms:",
+        "[math]S_{xx}(f_j) = \\frac{1}{K} \\sum_{k=1}^{K} I_k[j][/math]",
+        "The one-sided PSD is returned for positive frequencies only, with all non-DC, non-Nyquist components doubled so that \\( \\int_0^{f_N} S_{xx}(f)\\, df = \\sigma_x^2 \\), where \\( \\sigma_x^2 \\) is the mean-square (variance for zero-mean) of the signal. The PSD has physical units of [signal unit]²/Hz.",
+        "The <b>Spectrogram</b> is computed using the Short-Time Fourier Transform (STFT) with the same segmentation parameters as the Welch PSD. The Fourier amplitude of each windowed segment is computed and arranged as a column indexed by the segment centre time \\( t_k \\). The result is a two-dimensional matrix \\( S(t_k, f_j) = |X_k[j]| \\) that encodes how the spectral content of the signal evolves over time. It is rendered as a heatmap with time on the horizontal axis, frequency on the vertical axis, and Fourier amplitude encoded by a sequential colour scale.",
+        "The time–frequency resolution of the Spectrogram is governed by the Heisenberg–Gabor uncertainty principle: a longer <b>Window Length</b> improves frequency resolution but degrades temporal resolution, and vice versa. The optimal window length depends on the stationarity and duration of the features of interest. For earthquake records, a window length of 10–20 s is typically appropriate; for short or impulsive records, a shorter window should be used."
+      ]
+    },
+    {
+      "id": "parameters",
+      "menuId": "MainMenu_SM_Parameters",
+      "heading": "Strong Motion Parameters",
+      "icon": "parameters",
+      "summary": "Compute strong motion parameters for the selected acceleration channels.",
+      "intro": [
+        "The <b>Strong Motion Parameters</b> module computes a comprehensive set of strong ground motion parameters for acceleration channels only. Acceleration channels selected from the sidebar will be included in the analysis.",
+        "Computed strong ground motion parameters include peak values, energy-based measures, and duration-based measures. These parameters are widely used in seismic hazard analysis, ground motion selection, and structural performance assessment. The full list of computed parameters is given below.",
+
+        "[indent] [1]  <b>PGA</b>: Peak Ground Acceleration — maximum absolute value of the acceleration time series.",
+        "[indent] [2]  <a href='./static/data/RMS.pdf' target='_blank' rel='noopener noreferrer'><b>RMS</b></a>: Root Mean Square of the acceleration time series over the entire record duration.",
+        "[indent] [3]  <a href='https://en.wikipedia.org/wiki/Arias_intensity' target='_blank' rel='noopener noreferrer'><b>Arias Intensity</b></a>: Integral of the squared acceleration over the duration of the record, proportional to the total energy of the ground motion.",
+        "[indent] [4]  <a href='./static/data/Cumulative_Absolute_Velocity.pdf' target='_blank' rel='noopener noreferrer'><b>Cumulative Absolute Velocity</b></a>: Integral of the absolute value of acceleration over the duration of the record. Commonly used as an indicator of potential structural damage.",
+        "[indent] [5]  <b>Significant Duration</b>: Duration between the 5% and 95% Arias Intensity thresholds.",
+        "[indent] [6]  <b>Bracketed Duration</b>: Time between the first and last exceedance of a defined acceleration threshold. The threshold is user-configurable and defaults to 0.05g.",
+        "[indent] [7]  <b>Effective Pseudo-Spectral Acceleration</b>: Average pseudo-spectral acceleration (5% damping) over the period range 0.1 to 0.5 s, divided by 2.5.",
+        "[indent] [8]  <b>Effective Pseudo-Spectral Velocity</b>: Average pseudo-spectral velocity (5% damping) over the period range 0.5 to 2.0 s, divided by 2.5.",
+        "[indent] [9]  <a href='./static/data/Housner_Spectrum_Intensity_of_Strong_Motion_Earthquakes.pdf' target='_blank' rel='noopener noreferrer'><b>Housner Spectral Intensity</b></a>: Integral of the pseudo-spectral velocity (5% damping) over the period range 0.1 to 2.5 s.",
+        "[indent] [10] <a href='./static/data/Tsuneo_Katayama_SI_Sensor.pdf' target='_blank' rel='noopener noreferrer'><b>Katayama Spectral Intensity</b></a>: Integral of the pseudo-spectral velocity (20% damping) over the period range 0.1 to 2.5 s.",
+
+        "Before computing the strong ground motion parameters, a baseline correction and filtering, if enabled, are applied to remove any DC offset or trend from the signal and remove unwanted frequency components from the selected channels.",
+        "When the <b>Run</b> button is clicked, the strong motion parameters are computed and plotted in the graph panel. For instance, the <b>Arias Intensity</b> is displayed as a cumulative curve, with two dashed vertical lines marking the 5% and 95% Arias Intensity thresholds that define the <b>Significant Duration</b>. The computed Significant Duration is shown in the summary panel on the right.",
+        "The <b>Display</b> and <b>Unit</b> dropdowns in the summary panel allow selection of energy-based parameters to plot and the unit of the graph, respectively."
+      ],
+      "parameters": [
+        {
+          "label": "Select to display",
+          "id": "SM_Par_SelectToDisplay",
+          "type": "dropdown",
+          "description": "Choose which energy-based parameter to plot in the graph panel. Options include Arias Intensity and Cumulative Absolute Velocity."
+        },
+        {
+          "label": "Bracketed Duration Threshold (g)",
+          "id": "BracketedDuration",
+          "type": "number",
+          "default": 0.05,
+          "description": "Acceleration threshold used to define the Bracketed Duration — the time between the first and last exceedance of this level. The default of 0.05g is standard per Bolt (1969)."
+        }
+      ],
+      "details": [
+        "The <b>Strong Motion Parameters</b> module processes an acceleration time series [math]\\ddot{u}_g(t)[/math] sampled at uniform interval [math]\\Delta t[/math] to extract scalar engineering intensity measures. These parameters capture diverse facets of physical ground shaking: peak amplitudes, cumulative energy contents, spectral tracking properties, and event duration metrics.",
+        
+        "<b>1. Arias Intensity (Arias, 1970) & Significant Duration</b>",
+        "<b>Arias Intensity (AI)</b> represents the total seismic energy per unit mass delivered to an array of undamped SDOF oscillators. It is calculated by integrating the squared continuous acceleration record over the complete profile duration [math]t_{\\text{max}}[/math]:",
+        "[math]AI = \\frac{\\pi}{2g} \\int_{0}^{t_{\\text{max}}} [\\ddot{u}_g(t)]^2 \\, dt[/math]",
+        "Where [math]g[/math] is the gravitational acceleration acceleration constant (default: [math]9.80665\\text{ m/s}^2[/math]). In discrete space, this integral is tracked incrementally across the time arrays via a cumulative trapezoidal routine.",
+        "The maximum terminal amplitude is saved as [math]AI_{\\text{max}}[/math]. From this total profile, the system evaluates <b>Significant Duration ([math]T_s[/math])</b> as the interval over which the wave energy transfers from a [math]5\\%[/math] build threshold to a [math]95\\%[/math] completion barrier:",
+        "[math]T_s = T_{95\\%} - T_{5\\%}[/math]",
+        "Where timestamps [math]T_{5\\%}[/math] and [math]T_{95\\%}[/math] identify the exact indices where the cumulative discrete function satisfies [math]AI(t) \\ge 0.05 \\cdot AI_{\\text{max}}[/math] and [math]AI(t) \\ge 0.95 \\cdot AI_{\\text{max}}[/math] respectively.",
+
+        "<b>2. Bracketed Duration (Bolt, 1969)</b>",
+        "<b>Bracketed Duration ([math]T_d[/math])</b> characterizes the overall structural exposure window to strong acceleration pulses, disregarding early or late low-amplitude noise. It isolates the elapsed time window bounded by the very first and very last instant that the wave magnitude crosses an absolute baseline envelope threshold [math]a_{\\text{thresh}}[/math]:",
+        "[math]T_d = T_{\\text{last}} - T_{\\text{first}}[/math]",
+        "The parameter is parsed using a dual-direction array scanner over the discrete sequence. The initial front threshold crossing defines the startup timestamp [math]T_{\\text{first}} = n_{\\text{first}} \\cdot \\Delta t\\, \\text{ for } |\\ddot{u}_g(t)| \\ge a_{\\text{thresh}}[/math]. A reverse index search matches the back boundary: [math]T_{\\text{last}} = n_{\\text{last}} \\cdot \\Delta t\\, \\text{ for } |\\ddot{u}_g(t)| \\ge a_{\\text{thresh}}[/math]. If no pulse manages to break the user-defined threshold, the duration defaults to [math]0[/math] seconds.",
+
+        "<b>3. Cumulative Absolute Velocity (CAV)</b>",
+        "The <b>Cumulative Absolute Velocity (CAV)</b> is a proven indicator of industrial and nuclear structural damage potential, tracking the global accumulation of ground velocity over time. It represents the integral of the absolute acceleration record:",
+        "[math]CAV = \\int_{0}^{t_{\\text{max}}} |\\ddot{u}_g(t)| \\, dt[/math]",
+        "The discrete code resolves this by processing the absolute acceleration array through the trapezoidal integrator across the full operational time history.",
+
+        "<b>4. Effective Peak Acceleration (EPA)</b>", 
+        " EPS is proportional to the average pseudo-spectral acceleration ([math]S_{pa}[/math]) evaluated across the period band of [math]0.1[/math] to [math]0.5[/math] seconds at a reference damping ratio [math]\\xi = 0.05[/math]:",
+        "[math]EPA = \\frac{S_{pa}(\\xi=0.05)}{2.5}[/math]",
+        
+        "<b>5. Effective Peak velocity (EPV)</b>",
+        "EPV is proportional to the average pseudo-spectral velocity ([math]S_{pv}[/math]) evaluated across the period band of [math]0.5[/math] and [math]2.0[/math] seconds at at a reference damping ratio [math]\\xi = 0.05[/math]:",
+        "[math]EPV = \\frac{S_{pv}(\\xi=0.05)}{2.5}[/math]",
+
+        "<b>6. Housner Spectral Intensity (HSI)</b>",
+        "HSI quantifies the potential damage to structures by calculating the area under the pseudo-spectral velocity curve over the core structural period range from 0.1 to 2.5 seconds where most structures vibrate:",
+        "[math]HSI(\\xi) =  \\frac{1}{2.4} \\cdot \\int_{0.1}^{2.5} S_{pv}(T, \\xi) \\cdot dT[/math]",
+        "HSI is calculated numerically using the trapezoidal rule across a discrete period array [math]T[/math] from [math]0.1\\text{ s}[/math] to [math]2.5\\text{ s}[/math] at a target structural damping ratio of [math]\\xi = 0.05[/math].",
+        
+        "<b>7. Katayama Spectral Intensity (kSI)</b>",
+        "kSI provides an alternative measure of earthquake ground motion severity and damage potential, based on a modified formulation of the HSI concept:",
+        "[math]kSI(\\xi) = \\frac{1}{2.4} \\cdot \\int_{0.1}^{2.5} S_{pv}(T, \\xi) \\cdot dT[/math]",
+        "Where [math]S_{pv}[/math] represents the pseudo-spectral velocity response spectrum evaluated across the standard engineering structural period range from [math]0.1[/math] to [math]2.5[/math] seconds. Similar to the HSI index, kSI is calculated numerically via a trapezoidal integration routine across a discrete period array [math]T[/math] at a target structural reference damping ratio of [math]\\xi = 0.20[/math]."
+      ]
+    },
+    {
+      "id": "drift",
+      "menuId": "MainMenu_Drift",
+      "heading": "Drift",
+      "icon": "drift",
+      "summary": "Computes relative displacement (drift) between two points using displacement channels or by double-integrating acceleration channels.",
+      "intro": [
+                "The <b>Drift</b> module computes relative displacement between two points from displacement channels directly, from velocity channels by single integration, or from acceleration channels by double integration. It is a key structural response quantity used to assess damage levels in buildings under seismic loading. The <b>Drift</b> is computed as the displacement of the fisrt channel minus that of the second channel.",
+                "The analysis requires two channels. Select the two channels from the sidebar by double-clicking. The selected channels will appear in the table on the right panel, showing the file name, unit, channel number, sampling frequency (Hz), date and time, and azimuth. Both selected channels must have the same sampling frequency — channels with mismatched sampling frequencies cannot be used together in the analysis. Additionally, all channels must be in the same unit; if they are not, the data will automatically be converted to the unit of the first channel for consistency before analysis.",
+                "Channel synchronization is automatically handled. The overlapping duration is the length of the time window common across the two selected channels — it represents the usable data length available for the <b>Drift</b> computation. It is computed as the difference between the earliest end time and the latest start time across the two channels, effectively identifying the time interval where all channels have recorded simultaneously. Both channels must have a common overlapping time window — if the channels do not overlap in time, the overlapping duration will be zero and the analysis cannot proceed.",
+                "Before computing the <b>Drift</b>, baseline correction and filtering, if enabled, are applied to remove any DC offset or trend from the signal and remove unwanted frequency components from the selected channels. The quality of the result depends critically on the baseline correction and filtering steps, as low-frequency noise accumulates rapidly through integration.",
+                "When the <b>Run</b> button is clicked, the computed <b>Drift</b> is then displayed in the graph panel, allowing a detailed visual inspection and interpretation. The summary table alongside the graph shows the Peak absolute value, Mean, RMS, and Residual of the <b>Drift</b> on display. A Unit dropdown in the table allows the graph unit to be changed independently of the channel metadata. The table also shows the user-specified baseline correction method and the filter settings including type, band configuration, cut-off frequency, and whether zero-phase filtering was enabled. The Filter toggle plots the filter magnitude and phase response on the graph, and the FFT toggle displays the Fourier amplitude spectrum for the Drift on display."
+      ],
+      "details": [
+        "The <b>Drift</b> module evaluates relative displacement time histories (interstorey drift) by evaluating the differential motion between two synchronized monitoring stations.",
+        
+        "<b>1. Pre-Processing, Synchronization, and Unit Verification</b>",
+        "Before Drift evaluation, the system executes compatibility validations on the selected channel pair. The application verifies that the two waveforms share overlapping recording intervals; if no baseline temporal overlap is established, the application terminates automatically. Additionally, the system checks the respective engineering measurement dimensions. If a mismatch is identified, the absolute measurement unit of the second channel is dynamically converted and scaled to align perfectly with the unit framework of the first channel.",
+        
+        "<b>2. Baseline Rectification & Frequency Filtering</b>",
+        "To protect the selected channels from compounding numerical low-frequency trends, each channel is baseline corrected and filtered.",
+        "[math]x_{\\text{filtered}}(t) = \\mathcal{F}\\left\\{ x_{\\text{raw}}(t) - \\sum_{k=0}^{P} c_k \\cdot t^k \\right\\} \\quad (P \\in \\{0, 1, 2, 3\\})[/math]",
+        "The filtering applies either single-pass causal IIR filter blocks or forward-backward zero-phase configurations based on the user's phase preservation settings.",
+
+        "<b>3. Numerical Integration States</b>",
+        "Each channel is dynamically converted into displacement via discrete integration:",
+        "<b>Case A: Acceleration Records</b> require double numerical integration. The application implements integration to convert acceleration to velocity, reapplies baseline correction and filtering parameters, and repeats the the same process to calculate displacement:",
+        "[math]u(t) = \\iint \\ddot{u}_g(t) \\cdot dt^2[/math]",
+        "<b>Case B: Velocity Records</b> require a single numerical integration to compute the target displacement directly:",
+        "[math]u(t) = \\int \\dot{u}_g(t) \\cdot dt[/math]",
+
+        "<b>4. Drift Evaluation</b>",
+        "Once both channels occupy synchronous displacement states, the relative structural drift waveform is isolated via linear point-by-point subtraction:",
+        "[math]\\Delta u[n] = u_1[n] - u_2[n][/math]",
+        "Where [math]u_1[n][/math] represents the isolated displacement of Channel 1 and [math]u_2[n][/math] represents the isolated displacement of Channel 2."
+      ]
+    },
+    {
+      "id": "HVSR",
+      "menuId": "MainMenu_HV",
+      "heading": "H/V Spectral Ratio",
+      "icon": "HVSR",
+      "summary": "Compute the Horizontal-to-Vertical Spectral Ratio (<B>HVSR</b> / Nakamura technique) from three selected channels.",
+      "intro": [
+        "The <b>H/V Spectral Ratio</b> module computes the Horizontal-to-Vertical Spectral Ratio (HVSR) using the Nakamura technique. It is a standard method for estimating the fundamental resonance frequency of a site from ambient noise or earthquake recordings.",
+        "The analysis requires a three-component recording with two horizontal channels and one vertical channel. Select the three channels from the sidebar by double-clicking. The selected channels will appear in the table on the right panel, showing the file name, unit, channel number, sampling frequency (Hz), date and time, and azimuth. Ensure the first two channels in the table are horizontal and the last channel is vertical before running the analysis. All three selected channels must have the same sampling frequency — channels with mismatched sampling frequencies cannot be used together in the analysis. Additionally, all channels must be in the same unit; if they are not, the data will automatically be converted to the unit of the first channel for consistency before analysis.",
+        "Channel synchronization is automatically handled. The overlapping duration is the length of the time window common across all three selected channels — it represents the usable data length available for the HVSR computation. It is computed as the difference between the earliest end time and the latest start time across the three channels, effectively identifying the time interval where all channels have recorded simultaneously. All three channels must have a common overlapping time window — if the channels do not overlap in time, the overlapping duration will be zero and the analysis cannot proceed. A longer overlapping duration generally yields more stable results as more window segments can be averaged.",
+        "Before computing the HVSR, a baseline correction and filtering, if enabled, are applied to remove any DC offset or trend from the signal and remove unwanted frequency components from the selected channels.",
+        "The HVSR computation is controlled by three key parameters. The <b>Window Length</b> defines the duration of each window segment and controls the frequency resolution of the resulting spectrum. The <b>Overlap Ratio</b> determines how much consecutive window segments overlap, affecting the number of windows averaged and the stability of the result. The <b>Combination Type</b> defines how the two horizontal components are combined into a single horizontal spectrum prior to computing the HVSR ratio.",
+        "When the <b>Run</b> button is clicked, the mean <b>HVSR</b> is computed as the ratio of the combined horizontal Fourier amplitude spectrum to the vertical spectrum across all window segments. Note that the HVSR ratios across window segments are always positive and right-skewed — they cannot be negative; therefore, the distribution of HVSR values across window segments is log-normal. The mean <b>HVSR</b> is then smoothed using <b>Konno-Ohmachi (1998)</b> filter that applies narrow smoothing at low frequencies (preserving the peak's position) and wide smoothing at high frequencies (removing the 'pitchfork' noise that doesn't represent soil structure). The raw Fourier Amplitudes of window segments usually contains dozens of 'false peaks' caused by local machinery, wind, or transient traffic noise. The <b>Konno-Ohmachi (1998)</b> filter averages out these random spikes leaving only the broad, stable resonance peak created by the geological layers.",
+        "The computed <b>HVSR</b> is then displayed in the graph panel, allowing a detailed visual inspection and interpretation. A distinct peak in the HVSR curve may indicate the fundamental site frequency, which is related to the depth and impedance contrast of the underlying soil layers.",
+        "[indent] [1] <a href='https://doi.org/10.1785/BSSA0880010228' target='_blank' rel='noopener noreferrer'> Konno K, Ohmachi T (1998)</a> Ground-motion characteristics estimated from spectral ratio between horizontal and vertical components of microtremor. Bull Seis Soc Am 88(1):228–241",
+        "[indent] [2] <a href='./static/data/SESAME_HV_User_Guidelines.pdf' download>SESAME Project (2004)</a> Guidelines for the implementation of the H/V spectral ratio technique on ambient vibrations measurements, processing and interpretation.",
+        "[indent] [3] <a href='./static/data/HVSR_Yutaka_Nakamura.pdf' download>H/V Spectral Ratio</a>:  On The H/V Spectrum by Yutaka Nakamura."
+      ],
+      "parameters": [
+        {
+          "label": "Window Length (s)",
+          "id": "WindowLength",
+          "type": "number",
+          "default": 15,
+          "description": "Length of each window segment used in the HVSR computation. Longer windows give better frequency resolution but result in fewer averaged windows and a less stable HVSR estimate."
+        },
+        {
+          "label": "Overlap Ratio",
+          "id": "OverlapRatio",
+          "type": "number",
+          "default": 0.25,
+          "range": "0 – < 1",
+          "description": "Overlap ratio between successive window segments. A value of 0 means no overlap. Higher overlap (e.g. 0.75) increases the number of windows and smooths the HVSR estimate."
+        },
+        {
+          "label": "Combination Method",
+          "id": "Combination_Type",
+          "options": [
+            "Geometric Mean",
+            "Vector Sum",
+            "Quadratic Mean",
+            "Arithmetic Mean"
+          ],
+          "default": "Vector Sum",
+          "description": "Method used to combine the Fourier amplitude spectra of the two horizontal channels into a single horizontal spectrum prior to computing the H/V ratio."
+        }
+      ],
+      "details": [
+        "The <b>HVSR</b> module calculates the Horizontal-to-Vertical Spectral Ratio (ambient noise or microtremor analysis) from three-component seismic records to characterize site resonance frequencies and amplification factors.",
+
+        "<b>1. Waveform Windowing and Tapering</b>",
+        "To satisfy stationary signal requirements and optimize spectral stability, the continuous multi-component time-history record is partitioned into multiple overlapping time windows of fixed duration. To prevent spectral leakage and eliminate edge artifacts introduced by finite windowing boundaries, each discrete windowed block is conditioned using a cosine-tapered windowing function prior to frequency transformations:",
+        "[math]x_{\\text{tapered}}[n] = x[n] \\cdot w[n], \\quad 0 \\le n \\le N-1[/math]",
+
+        "<b>2. Fast Fourier Transform (FFT)</b>",
+        "Each tapered window undergoes an optimized discrete Fast Fourier Transform (FFT) routine to convert the discrete time series into its raw complex frequency-domain representation:",
+        "[math]X(f) = \\sum_{n=0}^{N-1} x_{\\text{tapered}}[n] \\cdot e^{-j \\cdot \\frac{2\\cdot\\pi}{N} \\cdot n \\cdot k}[/math]",
+        "The raw Fourier Amplitude Spectrum (FAS) is derived from the absolute modulus of the single-sided complex array:",
+        "[math]FAS(f) = 2 \\cdot |X(f)| \\cdot \\Delta t[/math]",
+
+        "<b>3. Konno & Ohmachi Spectral Smoothing</b>",
+        "The raw FAS are smoothed using the logarithmic <b>Konno-Ohmachi (1998)</b> windowing filter. This method maintains a constant frequency resolution bandwidth across a logarithmic scale, controlled by the smoothing coefficient parameter [math]b_c[/math]:",
+        "[math]FAS_{\\text{smoothed}}(f_c) = \\frac{\\sum FAS(f) \\cdot W_{\\text{KO}}(f, f_c)}{\\sum W_{\\text{KO}}(f, f_c)}[/math]",
+        "Where the Konno-Ohmachi smoothing kernel weight function [math]W_{\\text{KO}}[/math] evaluated at a target center frequency [math]f_c[/math] is defined as:",
+        "[math]W_{\\text{KO}}(f, f_c) = \\left( \\frac{\\sin\\left(b_c \\cdot \\log_{10}(f/f_c)\\right)}{b_c \\cdot \\log_{10}(f/f_c)} \\right)^4[/math]",
+
+        "<b>4. Horizontal Component Combination</b>",
+        "The horizontal spectral energy is resolved by combining the individual smoothed spectra of the orthogonal horizontal channels (typically North-South [math]H_{NS}[/math] and East-West [math]H_{EW}[/math]). The module evaluates the horizontal envelope using one of the four combination methods: Geometric Mean, Vector Sum, Quadratic Mean, and Arithmetic Mean:",
+
+        "<b>Geometric Mean Mode:</b>",
+        "The geometric mean computes the square root of the product of the two orthogonal components. This is a standard geotechnical convention that reduces sensitivity to out-of-phase high-amplitude noise on a single component:",
+        "[math]H_{\\text{comb}}(f) = \\sqrt{H_1(f) \\cdot H_2(f)}[/math]",
+
+        "<b>Vector Sum Mode:</b>",
+        "The vector sum represents the complex amplitude resultant of both horizontal directions, preserving the total horizontal plane wave energy at each discrete frequency:",
+        "[math]H_{\\text{comb}}(f) = \\sqrt{H_1^2(f) + H_2^2(f)}[/math]",
+
+        "<b>Quadratic Mean (RMS) Mode:</b>",
+        "The Root-Mean-Square (RMS) configuration scales the total horizontal energy vector by a factor of [math]1/\\sqrt{2}[/math]. This provides an orientation-independent average amplitude envelope across the horizontal plane:",
+        "[math]H_{\\text{comb}}(f) = \\sqrt{\\frac{H_1^2(f) + H_2^2(f)}{2}}[/math]",
+
+        "<b>Arithmetic Mean Mode:</b>",
+        "The arithmetic mean evaluates a simple linear average of the two components, tracking the basic central tendency of the directional spectral profiles:",
+        "[math]H_{\\text{comb}}(f) = \\frac{H_1(f) + H_2(f)}{2}[/math]",        
+
+        "<b>5. Ratio Evaluation and Ensemble Averaging</b>",
+        "For each active time window, the spectral ratio is calculated by normalizing the combined horizontal spectrum by the smoothed vertical component spectrum [math]V(f)[/math]:",
+        "[math]HVSR_w(f) = \\frac{H_{\\text{comb}, w}(f)}{V_w(f)}[/math]",
+        "The final site response curve represents the global ensemble average computed across all validated time windows. Along with the mean curve, standard geometric deviation boundaries are evaluated to characterize the confidence envelope of the fundamental resonant peak [math]f_0[/math]:",
+        "[math]HVSR_{\\text{mean}}(f) = \\exp\\left( \\frac{1}{N_w} \\cdot \\sum_{w=1}^{N_w} \\ln\\left(HVSR_w(f)\\right) \\right)[/math]"
+      ]
+    },
+    {
+      "id": "pwave",
+      "menuId": "MainMenu_PWave",
+      "heading": "P-Wave",
+      "icon": "pwave",
+      "summary": "Detect the P-wave arrival time from the selected channel.",
+      "intro": [
+        "The <b>P-Wave</b> module detects the arrival time of the primary (P) wave in the selected channel. The P-wave is the first body wave to arrive at a seismic station and travels as a compressional wave through the earth.",
+        "Accurate P-wave picking is essential for computing travel times, estimating epicentral distances from S-P time differences, and determining the onset of strong motion for duration calculations.",
+        "The detected arrival time is displayed on the signal graph and can be used as a reference point for trimming or windowing the record in other modules."
+      ],
+      "notes": [
+        "P-wave picking can be used to determine the onset of strong motion and to compute S-P time differences for epicentral distance estimation."
+      ],
+      "details":[
+            "The response spectrum is defined as...",
+            "[math]S_a(T, \\xi) = \\max_t | \\ddot{u}(t) + \\ddot{u}_g(t) |[/math]",
+            "Where \\( T \\) is the natural period..."
+      ]
+    },
+    {
+      "id": "settings",
+      "menuId": "MainMenu_Settings",
+      "heading": "Settings",
+      "icon": "settings",
+      "summary": "Configure global parameters across the analsyis modules.",
+      "intro": [
+        "The <b>Settings</b> module provides global configuration parameters that apply across the analysis modules.",
+        "The Newmark coefficients control the numerical integration scheme used by the SDOF and Response Spectrum modules for linear and non-linear time-history analysis. The default values (α = 0.5, β = 0.25) correspond to the unconditionally stable constant average acceleration method. The convergence tolerances apply to the non-linear Newmark iteration used in inelastic SDOF and constant-ductility spectral computations."
+      ],
+      "parameters": [
+          {
+            "label": "Alpha (α)",
+            "id": "Newmark_Alfa",
+            "default": 0.5,
+            "description": "Newmark parameter. α = 0.5 gives no artificial damping (average acceleration method)."
+          },
+          {
+            "label": "Beta (β)",
+            "id": "Newmark_Beta",
+            "default": 0.25,
+            "description": "Newmark parameter. β = 0.25 with α = 0.5 gives the unconditionally stable constant average acceleration method."
+          },
+          {
+            "label": "Maximum Δt/T",
+            "id": "Newmark_dtT",
+            "default": 0.02,
+            "description": "Maximum allowable ratio of the integration time step to the natural period of SDOF. If the record sampling interval exceeds this limit, the analysis will sub-step automatically."
+          },
+          {
+            "label": "Out-of-balance Force Tolerance",
+            "id": "Newmark_OutOfBalanceForceTolerance",
+            "default": "1e-6",
+            "description": "Convergence tolerance on the residual (out-of-balance) force for the non-linear Newmark iteration."
+          },
+          {
+            "label": "Ductility Convergence Tolerance",
+            "id": "Newmark_DuctilityConvergenceTolerance",
+            "default": "1e-6",
+            "description": "Convergence tolerance on the ductility demand for constant-ductility inelastic spectra computation."
+          }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,627 @@
+.main-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    background-color: var(--main-background-color);
+    overflow: hidden;
+    width: 100%;
+}
+
+/***************************************************************************/
+/*************  Horizontal Control (Panel-1, Panel-2 and Panel-3 ***********/
+.resizable-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.resizable-panels-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0; 
+}
+
+.resizable-panel {
+    display: flex;
+    flex-direction: row;
+    width: calc(100% - 2 * var(--panel-padding));
+    margin: 0 var(--panel-padding);
+    overflow: auto;
+    background-color: var(--panel-background-color);
+    border-radius: 0.8rem;
+    border: 0.001rem solid gray; 
+    font-size: var(--panel-font-size);
+}
+
+.resizable-panel-4 {
+    display: none;
+    flex-direction: row;
+    width: calc(100% - 2 * var(--panel-padding));
+    height: 100%;
+    margin: 0 var(--panel-padding);
+    overflow: auto;
+    background-color: var(--panel-background-color);
+    border-radius: 0.8rem;
+    border: 0.001rem solid gray; 
+    font-size: var(--panel-font-size);
+}
+
+#panel1 {
+    min-height: var(--min-panel1-height);
+    scrollbar-width: none; 
+    -ms-overflow-style: none; 
+}
+
+#panel1::-webkit-scrollbar {
+    display: none; 
+}
+
+#panel2 {
+    flex-direction: column;
+    min-height: var(--min-panel2-height);
+    -ms-overflow-style: none; 
+}
+
+#panel2::-webkit-scrollbar {
+    display: none; 
+}
+
+.resizable-panel:first-of-type {
+    margin-top: var(--panel-padding);
+}
+
+.resize-handle {
+    height: var(--resize-handle-height);
+    width: 100%;
+    cursor: ns-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3125rem 0;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.resize-handle:active .resize-handle-bar {
+    background-color: #666;
+}
+
+.resize-handle-horizontal {
+    width: var(--resize-handle-width);
+    height: 100%;
+    cursor: ew-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background-color: rgb(171, 169, 169);
+}
+
+.resize-handle-horizontal:active .resize-handle-bar {
+    background-color: #666;
+}
+
+.bottom-fixed-panel {
+    width: calc(100% - 2 * var(--panel-padding));
+    height: var(--bottom-panel-height);
+    min-height: var(--min-panel3-height);
+    margin: var(--panel-padding);
+    overflow: hidden;
+    background-color: var(--panel-background-color);
+    border-radius: 0.8rem;
+    border: 0.001rem solid gray; 
+    flex-shrink: 0;
+    padding: 0.5rem 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.panel-content {
+    display: flex;
+    align-items: center; 
+    height: 100%;
+}
+
+
+
+/***************************************************************************/
+/*************  SIDEBAR ****************************************************/
+.sidebar {
+    width: var(--sidebar-initial-width);
+    min-width: var(--sidebar-min-width);
+    max-width: 50vw;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none; /* IE and Edge */
+    border: 0.001rem solid gray; 
+    border-radius: 0.8rem;
+    background-color: var(--panel-background-color);
+}
+
+.TreeView {
+    flex-direction: column;
+    white-space: nowrap; /* Prevents text from wrapping */
+    width: 100%;
+    background-color: var(--panel-background-color);
+}
+
+.TreeView_Title {
+    display:flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0rem;
+    font-size: 1rem;
+    font-weight: bold;
+    align-items: center;    
+    justify-content: center;    
+    background-color: var(--Table_Head_Color);
+    height: var(--sidebar-title-height);
+    user-select: none;
+    cursor: pointer;
+}
+
+
+.TreeView_Files_ul {
+    list-style-type: none;
+    padding-left: 0.5rem;
+}
+
+.TreeView_Files {
+    display: flex;
+    text-align: center;
+    align-items: center;
+    user-select: none;
+    margin-bottom: 0.0rem;
+    margin-top: 1.1rem;
+    background-color: var(--Channels_Table_Row_Color);
+}
+
+.Files:hover {
+    font-weight: bolder;
+}
+
+.TreeView_File {
+    font-size: 1.0rem;
+    font-weight: bold;
+}
+
+.TreeView_SVG {
+    width: 1.3rem;
+    height: 1.3rem;
+    min-width: 1.3rem; 
+    min-height: 1.3rem; 
+    flex-shrink: 0;     
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.LabelArrow {
+    font-size: 1.0rem;
+    flex-shrink: 0;  
+    min-width: 1.2rem; 
+}
+
+
+.AddMain {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    font-size: 0.8rem;
+}
+
+.AddTable {
+    margin-right: 2.0rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.RemoveTable {
+    margin-right: 0.0rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.SideBar_Button_Svg {
+    width: var(--sidebar-height-svg);
+    height: var(--sidebar-height-svg);
+}
+
+
+.FileListTree_Channel_li {
+    display: flex;
+    align-items: center;
+}
+
+.FileListTree_Channel_li_hide {
+    display: none;
+}
+
+.File_CheckBox_Ch_Blue {
+    margin: 0rem 0.3rem 0rem 3.5rem !important;
+    border-color: blue !important;
+}
+
+.File_CheckBox_Ch_Green {
+    margin: 0rem 0.5rem 0rem 0.5rem !important;
+    background-color: white !important;
+    border-color: #10b981 !important;
+}
+
+.File_CheckBox_Ch_Green:checked {
+    background-color: #10b981 !important;
+}
+
+.LabelClass {
+    margin: 0rem !important;
+    user-select: none;
+    white-space: pre; 
+    font-size: 0.9rem;
+}
+
+.LabelClass:hover {
+    font-weight: bold;
+}
+
+
+/***************************************************************************/
+/*************  PANEL-1 ****************************************************/
+.Table_Channel_Div {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: fit-content;
+}
+
+.main-table {
+    width: 100%;
+    height: fit-content;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.main-table-tr {
+    position: sticky;
+    top: 0rem;             
+    z-index: 10; 
+
+    display: none;
+    height: 3rem;
+        
+    align-items: center;
+    justify-content: space-between !important;
+
+    user-select: none;
+    font-size: 1.0rem;
+    
+    background-color: var(--Table_Head_Color);
+    border: 0.01rem solid black;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    
+    text-align: right;
+    font-weight: bold;
+    border-radius: 0.25rem;
+}
+
+
+.toggle, .toggle2 { 
+    display: none;
+}
+
+.toggle-label {
+    display: block;
+    width: 2.0rem;
+    height: 1.0rem;
+    background: #708de5;
+    background: #99aeef;
+    border-radius: 0.6rem;
+    position: relative;
+    cursor: pointer;
+}
+
+.toggle-label::before {
+    content: '';
+    width: 0.75rem;
+    height: 0.75rem;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 0.12rem;
+    left: 0.2rem;
+    transition: left 0.2s;
+}
+
+.toggle:checked + .toggle-label { background: #61b464; }
+.toggle:checked + .toggle-label::before { left: 0.99rem; }
+
+.toggle2:checked + .toggle-label { background: #61b464; }
+.toggle2:checked + .toggle-label::before { left: 0.99rem; }
+
+
+.File-Name-Header {
+    display: flex;
+    height: 2.5rem;;
+    flex-direction: row;
+
+    text-align: center;
+    align-items: center;        
+    justify-content: center;  
+
+    font-weight: bolder;
+    user-select: none;
+    cursor: pointer;
+    background-color: var(--Table_Head_Color);
+    border-top: 0.01rem solid black;
+    border-left: 0.01rem solid black;
+    border-right: 0.01rem solid black;
+    margin-top: 0.5rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.File-Name {
+    font-size: 1.1rem;
+    user-select: none;
+    cursor: pointer;
+    padding-left: 0.5rem;
+}
+
+.File-Name-Select {
+    font-size: 1rem;
+    font-weight: bold;
+    user-select: none;
+    margin-left: 1rem;
+}
+
+.subtable-container {
+    width: 100%;
+    display: none;
+}
+
+.subtable-container.expanded {
+    width: 100%;
+    display: table-row;
+}
+
+.subtable-container-td {
+    text-align: right;
+}
+
+.Channels_Table {
+    table-layout: fixed;          /* Key: stops content from forcing column wider */
+    width: calc(100% - 0.90rem);
+    height: fit-content;
+    background-color: var(--Channels_Table_Row_Color);
+    margin-bottom: 1.5rem;
+    margin-left: 0.45rem;
+    border-bottom: 0.01rem solid black;
+    border-left: 0.01rem solid black;
+    border-right: 0.01rem solid black;
+    border-collapse: collapse;    /* optional but usually cleaner */
+}
+
+.Channels_Table_Select {
+    text-align: right;
+    direction: rtl; /* Right-to-left for dropdown arrow on left */
+    border: 0.01rem solid black !important;
+}
+
+.Channels_Table_Thead {
+    font-size: 1.0rem;
+    height: fit-content;
+    user-select: none;
+} 
+
+.Channels_Table_Body_Tr {
+    font-size: 1.0rem;
+    user-select: none;
+}
+
+.Channels_Table_Body_Tr:hover {
+    background-color: var(--Channels_Table_Row_Color_Hover);
+}
+
+.Channels_Table_Body_Td_Right {
+    text-align: right;
+}
+
+.Channels_Table_Body_Td_Left {
+    text-align: left;
+}
+
+.Channels_Table_Body_Td_Center {
+    text-align: center;
+}
+
+
+.main-table-tr th:nth-child(1) { width: 15%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+
+.Channels_Table th:nth-child(1),
+.Channels_Table td:nth-child(1) { width: 15%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; display: none;}
+
+.Channels_Table th:nth-child(2), .main-table-tr th:nth-child(2),
+.Channels_Table td:nth-child(2) { width: 5%; }
+
+.Channels_Table th:nth-child(3), .main-table-tr th:nth-child(3),
+.Channels_Table td:nth-child(3) { width: 8%; }
+
+.Channels_Table th:nth-child(4), .main-table-tr th:nth-child(4),
+.Channels_Table td:nth-child(4) { width: 8%; }
+
+.Channels_Table th:nth-child(5), .main-table-tr th:nth-child(5),
+.Channels_Table td:nth-child(5) { width: 15%; }
+
+.Channels_Table th:nth-child(6), .main-table-tr th:nth-child(6),
+.Channels_Table td:nth-child(6) { width: 10%; }
+
+.Channels_Table th:nth-child(7), .main-table-tr th:nth-child(7),
+.Channels_Table td:nth-child(7) { width: 10%; }
+
+.Channels_Table th:nth-child(8), .main-table-tr th:nth-child(8),
+.Channels_Table td:nth-child(8) { width: 20%; }
+
+.Channels_Table th:nth-child(9), .main-table-tr th:nth-child(9),
+.Channels_Table td:nth-child(9) { width: 10%; }
+
+
+
+/***************************************************************************/
+/*************  PANEL-2 ****************************************************/
+
+
+
+/***************************************************************************/
+/*************  PANEL-3 ****************************************************/
+.ProgressBar_Label {
+    font-size: 1.1rem;
+    margin: 0.3rem 1rem 0.3rem 1rem;
+    user-select: none;
+}
+
+
+
+/***************************************************************************/
+/***** Media queries: On small screens, start with sidebar collapsed *******/
+@media (max-width: 768px) {
+    :root {
+        --panel-padding: 0.0rem;
+        --panel-font-size: 1rem;
+        --min-panel1-height: 0;
+        --min-panel2-height: 0;
+        --min-panel3-height: 0;
+        --bottom-panel-height: 1rem; 
+        --resize-handle-height: 0rem;
+        --sidebar-min-width: 0rem;
+        --sidebar-initial-width: 0rem;
+        --resize-handle-width: 0.25rem;
+    }
+
+    .panel-content {
+        padding: 0.9375rem;
+    }
+
+    .resizable-panel {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: var(--sidebar-min-width);
+    }
+
+    .hide-mobile {
+        display: none;
+    }
+
+    .File-Name-Header, .MainHeader {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.3rem;
+        margin-left: 0.3rem;
+        margin-right: 0.3rem;
+        
+    }
+
+    .main-table-tr {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.0rem;
+        margin-left: 0.3rem;
+        margin-right: 0.3rem !important;
+    }
+
+    .subtable-container-td {
+        margin: 0rem;
+    }
+
+
+    .File-Name {
+        font-size: 0.9rem;
+    }
+
+    .File-Name-Select {
+        padding: 0.0rem 0.0rem;
+    }
+
+    .Channels_Table {
+        width: calc(100% - 0.5rem);
+        margin-left: 0.25rem;
+        margin-right: 3.0rem;
+    }
+
+    .Channels_Table_Thead {
+        font-size: 0.8rem;
+    } 
+
+    /* File Name */
+    .Channels_Table th:nth-child(1), .main-table-tr th:nth-child(1),
+    .Channels_Table td:nth-child(1) { width: 15%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; display: none;}
+
+    /* Ch Name */
+    .Channels_Table th:nth-child(2), .main-table-tr th:nth-child(2),
+    .Channels_Table td:nth-child(2) { width: 5%; text-align: center; }
+
+    /* Length */
+    .Channels_Table th:nth-child(3), .main-table-tr th:nth-child(3),
+    .Channels_Table td:nth-child(3) { width: 8%;  display: none; }
+
+    /* Sampling */
+    .Channels_Table th:nth-child(4), .main-table-tr th:nth-child(4),
+    .Channels_Table td:nth-child(4) { width: 8%;  display: none; }
+
+    /* Type */
+    .Channels_Table th:nth-child(5), .main-table-tr th:nth-child(5),
+    .Channels_Table td:nth-child(5) { width: 20%; }
+
+    /* Unit */
+    .Channels_Table th:nth-child(6), .main-table-tr th:nth-child(6),
+    .Channels_Table td:nth-child(6) { width: 10%; }
+
+    /* Scale Factor */
+    .Channels_Table th:nth-child(7), .main-table-tr th:nth-child(7),
+    .Channels_Table td:nth-child(7) { width: 10%; }
+
+    /* Date And Time */
+    .Channels_Table th:nth-child(8), .main-table-tr th:nth-child(8),
+    .Channels_Table td:nth-child(8) { width: 20%;  display: none; }
+
+    /* Azimuth */
+    .Channels_Table th:nth-child(9), .main-table-tr th:nth-child(9),
+    .Channels_Table td:nth-child(9) { width: 10%;  display: none; }
+
+    
+    .Channels_Table_Body_Tr {
+        font-size: 0.8rem;
+    }
+
+    .expand-icon {
+        margin-right: 0rem
+    }
+
+    .toggle-label {
+        margin-left: 0.0rem;
+        margin-right: 0.0rem;
+    }
+
+    .ProgressBar_Label {
+        font-size: 0.8rem;
+    }
+
+
+    .bottom-fixed-panel {
+        height: var(--bottom-panel-height);
+    }
+
+
+}

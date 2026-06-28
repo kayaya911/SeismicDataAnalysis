@@ -1,0 +1,56 @@
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+
+.Right_Click_Div {
+    display: none;
+    position: absolute;
+    font-size: 0.80rem;
+    background-color: var(--righClick-background-color);
+    
+    border: 0.1rem solid black;
+    border-radius: 1rem;
+    
+    width: 18rem;
+    height: fit-content;
+
+    padding: 0.5rem;
+
+    z-index: 2000;
+}
+
+.Right_Click_ul, .Right_Click_ul_Sampling, .Right_Click_ul_Type, .Right_Click_ul_Azimuth {
+    user-select: none;
+    list-style: none;
+    margin: 0rem 0rem 0.4rem 0.4rem;
+    padding: 0;
+}
+
+.Right_Click_li {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    user-select: none;
+    margin-left: 1rem;
+}
+
+.RightClick_Label {
+    margin-left: 0.8rem;
+}
+
+.RightClick_Label:hover {
+    font-weight: bolder;
+}
+
+.RightClick_Label_br {
+    user-select: none;
+    display: none;
+    font-weight: bold;
+    margin-left: 0.5rem;
+}
+
+.Right_Click_Section_Diveder {
+    width: 100%;
+    font-size: 0.9rem;
+    font-weight: bolder;
+    background-color: var(--righClick-Li-background-color);
+}
