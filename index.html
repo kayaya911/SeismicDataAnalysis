@@ -38,7 +38,15 @@
         <link rel="stylesheet" href="./static/css/helpPage.css"             />
 
         <!-- LOAD ALL FUNCTIONS-->
-        <script type="text/javascript" src="./static/js/Signal.min.js">             </script>   <!-- Bessel.js                       -->
+        <script type="text/javascript" src="./static/js/XLSX.js">               </script>   <!-- SheetJS Excel Export            -->
+        <script type="text/javascript" src="./static/js/Parameter_Windows.js">  </script>   <!-- Windows for Entering Parameters -->
+        <script type="text/javascript" src="./static/js/Load_Files.js">         </script>   <!-- Load Seismic Data Files         -->
+        <script type="text/javascript" src="./static/js/Plotly_Graph.js">       </script>   <!-- Plotly Graphs                   -->
+        <script type="text/javascript" src="./static/js/Right_Click.js">        </script>   <!-- Right Click Menu                -->
+        <script type="text/javascript" src="./static/js/Signal_Processing.js">  </script>   <!-- Signal Processing               -->
+        <script type="text/javascript" src="./static/js/My_Functions.js">       </script>   <!-- Utility Function                -->
+        <script type="text/javascript" src="./static/js/MeasurmentUnits.js">    </script>   <!-- MeasurmentUnits.js              -->
+        <script type="text/javascript" src="./static/js/Bessel.js">             </script>   <!-- Bessel.js                       -->
 
 
         <!-- Bootstrap -->
@@ -120,6 +128,16 @@
                         </svg>
                     </button>
                     <label for="Header_Download">Download</label>
+                </div>
+
+                <div class="Header_Buttons_Menu_Div" onclick="LoadServerSampleFilesDirectly()">
+                    <button class="Header_Buttons_Menu" id="Header_Download_Sample_Files"  title="Download Sample Files">
+                        <svg class="Header_Button_Svg" viewBox="0 0 24 24">
+                            <path d="M18,22H6a2,2,0,0,1-2-2V4A2,2,0,0,1,6,2h7.1a2,2,0,0,1,1.5.6l4.9,5.2A2,2,0,0,1,20,9.2V20A2,2,0,0,1,18,22Z" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                            <line stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="9" x2="15" y1="16.5" y2="16.5"/>
+                        </svg>
+                    </button>
+                    <label for="Header_Download_Sample_Files">Sample File</label>
                 </div>
 
                 <div class="Header_Buttons_Menu_Div" onclick="InfoBarShowHide()">
