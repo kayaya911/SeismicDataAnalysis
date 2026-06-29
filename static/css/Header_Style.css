@@ -134,7 +134,7 @@
     }
 
     /* Keep Run button visible and styled */
-    .Header_Buttons .Header_Buttons_Menu_Div:first-child {
+    .Header_Buttons .Header_Buttons_Menu_Div:first-child:not(.run-btn-hidden) {
         display: flex !important;
         position: relative;
         flex-direction: column;
@@ -143,6 +143,10 @@
         padding: 0;
         margin: 0;
         background-color: transparent;
+    }
+
+    .Header_Buttons .Header_Buttons_Menu_Div:first-child.run-btn-hidden {
+        display: none !important;
     }
 
     /* Hide all other buttons by default - they go in dropdown */
@@ -237,11 +241,42 @@
     
     /* Adjust logo font for very small screens - still readable */
     .Header_Logo_Span {
-        font-size: 1.1rem;  /* Increased from 0.85rem */
+        font-size: 1.0rem;  /* Increased from 0.85rem */
+        max-width: 8rem;       /* forces wrap before hitting the Run button */
+        white-space: normal;   /* allow two-line wrap */
+        line-height: 1.2;
+        text-align: center;
     }
     
     /* Make logo image slightly smaller on tiny screens */
     .Header_Logo_Img {
-        width: calc(1.3 * var(--header-height-svg));
+        width: calc(1.2 * var(--header-height-svg));
+    }
+
+    /* Give the Run button a firm right anchor so it never drifts left */
+    .Header_Buttons .Header_Buttons_Menu_Div:first-child {
+        min-width: 2.8rem;
+        width: 2.8rem;
+    }
+}
+
+/* Very small screens (iPhone SE ~375px) - prevent title/Run button overlap */
+@media (max-width: 400px) {
+    .Header_Logo_Span {
+        font-size: 0.9rem;
+        max-width: 8rem;       /* forces wrap before hitting the Run button */
+        white-space: normal;   /* allow two-line wrap */
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    .Header_Logo_Img {
+        width: calc(1.1 * var(--header-height-svg));
+    }
+
+    /* Give the Run button a firm right anchor so it never drifts left */
+    .Header_Buttons .Header_Buttons_Menu_Div:first-child {
+        min-width: 2.8rem;
+        width: 2.8rem;
     }
 }

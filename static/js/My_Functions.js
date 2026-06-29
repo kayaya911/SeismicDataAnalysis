@@ -299,13 +299,13 @@ async function AnalysisMenu_Selection(a) {
     InfoBarShowHide('flex'); 
 
     // Run_Button on Header
-    document.getElementById('Run_Button_Div').style.display = 'flex';
+    document.getElementById('Run_Button_Div').classList.remove('run-btn-hidden');
     document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
 
     // Then show only the relevant ones based on selection
     if (a.id == "MainMenu_LoadData") {
         // Load Data
-        document.getElementById('Run_Button_Div').style.display = 'none';
+        document.getElementById('Run_Button_Div').classList.add('run-btn-hidden');
         document.getElementById("Table_Channel_Div").style.display = "flex";
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Data";
         PageNo = 0;
@@ -890,7 +890,8 @@ function initHamburgerMenu() {
 
         // Make labels clickable in mobile menu (exclude Run button)
         mobileMenu.querySelectorAll('.Header_Buttons_Menu_Div:not(:first-child) label').forEach(label => {
-            label.addEventListener('click', function() {
+            label.addEventListener('click', function(e) {
+                e.stopPropagation();
                 // Trigger the associated button click
                 const button = this.previousElementSibling || this.parentElement.querySelector('button');
                 if (button && button.onclick) {
@@ -905,6 +906,14 @@ function initHamburgerMenu() {
                 mobileMenu.classList.remove('mobile-menu-open');
             });
         });
+
+        const loadInput = document.getElementById('LoadInputFiles');
+        if (loadInput) {
+            loadInput.addEventListener('change', function() {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('mobile-menu-open');
+            });
+        }
     }
 }
 //-----------------------------------------------------------------------------------------------
