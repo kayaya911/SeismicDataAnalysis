@@ -194,13 +194,14 @@ async function Load_Files(ev) {
             
             // Appends each channel in the file into the ChannelList[]
             // Also, appends each channel to the Table on the home-page
-            if      ( fileExt == "VIF" )                          { Read_VIF_BCSIMS( FileName, delta, dataview ); }
-            else if ((fileExt == "V1"  ) || (fileExt == "RAW"))   { Read_V1_COSMOS(  FileName, delta, dataview ); }
-            else if  (fileExt == "V1C" )                          { Read_V1c_COSMOS( FileName, delta, dataview ); }
-            else if ((fileExt == "MSD" ) || (fileExt == "MSEED")) { Read_MSD(        FileName, delta, dataview ); }
-            else if ( fileExt == "TXT" )                          { Read_TXT(        FileName, delta, dataview ); }
-            else if ( fileExt == "ASC" )                          { Read_ASC(        FileName, delta, dataview ); }
-            else if ( fileExt == "DAT" ) {
+            if      (  fileExt == "VIF" )                                                   { Read_VIF_BCSIMS( FileName, delta, dataview ); }
+            else if (( fileExt == "V1"  ) || (fileExt == "RAW"))                            { Read_V1_COSMOS(  FileName, delta, dataview ); }
+            else if  ( fileExt == "V1C" )                                                   { Read_V1c_COSMOS( FileName, delta, dataview ); }
+            else if (( fileExt == "MSD" ) || (fileExt == "MSEED"))                          { Read_MSD(        FileName, delta, dataview ); }
+            else if (  fileExt == "TXT" )                                                   { Read_TXT(        FileName, delta, dataview ); }
+            else if (  fileExt == "ASC" )                                                   { Read_ASC(        FileName, delta, dataview ); }
+            else if (( fileExt == "AT2" ) || ( fileExt == "VT2" ) || ( fileExt == "DT2" ) ) { Read_PEER_Data(   FileName, delta, dataview); }
+            else if (  fileExt == "DAT" ) {
                 
                 // Check if it matches the '=>' sync character from your existing Read_DAT
                 let isType1 = dataview.getUint16(66, true) === 0x3E3D;
@@ -214,8 +215,6 @@ async function Load_Files(ev) {
     
     
 }
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 async function Add_To_Table(Channel) {
 
@@ -569,6 +568,191 @@ async function Add_To_Table(Channel) {
 }
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
+async function Read_PEER_Data(FileName, delta, dataview) {
+
+    // Reads a PEER NGA Strong Motion Database formatted file (.AT2  .VT2  .DT2)
+    // File layout:
+    //   Line 1 : "PEER NGA STRONG MOTION DATABASE RECORD"
+    //   Line 2 : Event Name, Date, Station, Component  (comma separated)
+    //   Line 3 : "ACCELERATION/VELOCITY/DISPLACEMENT TIME SERIES IN UNITS OF <unit>"
+    //   Line 4 : "NPTS=  nnnn, DT=  .dddd SEC, ..."
+    //   Remaining lines : digitized data values (free-format, multiple values per line)
+
+    // Decleration of variables
+    let Line1, Line2, Line3, Line4, temp, temp1;
+    let EventInfo, Orientation, SeriesType, UnitOfMeasure, TypeAndUnitIndex, DateTime;
+    let NPTS, DT, data=[], Time=[];
+    let EndOfFile=false, Ind=0, TNumByte;
+
+    TNumByte = dataview.byteLength;
+
+    // --- Header lines ---------------------------------------------------------------------------
+    Line1 = FGetL(dataview);    // "PEER NGA STRONG MOTION DATABASE RECORD"
+    Line2 = FGetL(dataview);    // Event Name, Date, Station, Component
+    Line3 = FGetL(dataview);    // "<TYPE> TIME SERIES IN UNITS OF <UNIT>"
+    Line4 = FGetL(dataview);    // "NPTS=  nnnn, DT=  .dddd SEC, ..."
+
+    // Event Name / Station / Orientation (last comma-separated field is the component/orientation)
+    EventInfo   = Line2.split(',').map( s => s.trim() );
+    Orientation = EventInfo.at(-1);
+
+    // Series type (ACCELERATION / VELOCITY / DISPLACEMENT) and its unit
+    SeriesType    = Line3.trim().split(/\s+/)[0].toUpperCase();
+    UnitOfMeasure = Line3.slice( Line3.toUpperCase().indexOf('UNITS OF') + 8 ).trim().toUpperCase();
+
+    // Map (Type, Unit) found in the header to the TypeAndUnit() index used by this webtool
+    if      ( SeriesType == 'ACCELERATION' ) {
+        if      ( UnitOfMeasure == 'G'      ) { TypeAndUnitIndex = 1;  }
+        else if ( UnitOfMeasure == 'M/S2'   ) { TypeAndUnitIndex = 2;  }
+        else if ( UnitOfMeasure == 'CM/S2'  ) { TypeAndUnitIndex = 3;  }
+        else if ( UnitOfMeasure == 'MM/S2'  ) { TypeAndUnitIndex = 4;  }
+        else                                  { TypeAndUnitIndex = 3;  } // default to cm/s² (PEER convention)
+    }
+    else if ( SeriesType == 'VELOCITY' ) {
+        if      ( UnitOfMeasure == 'M/S'    ) { TypeAndUnitIndex = 12; }
+        else if ( UnitOfMeasure == 'CM/S'   ) { TypeAndUnitIndex = 13; }
+        else if ( UnitOfMeasure == 'MM/S'   ) { TypeAndUnitIndex = 14; }
+        else                                  { TypeAndUnitIndex = 13; } // default to cm/s (PEER convention)
+    }
+    else if ( SeriesType == 'DISPLACEMENT' ) {
+        if      ( UnitOfMeasure == 'M'      ) { TypeAndUnitIndex = 22; }
+        else if ( UnitOfMeasure == 'CM'     ) { TypeAndUnitIndex = 23; }
+        else if ( UnitOfMeasure == 'MM'     ) { TypeAndUnitIndex = 24; }
+        else                                  { TypeAndUnitIndex = 23; } // default to cm (PEER convention)
+    }
+    else { TypeAndUnitIndex = 1; } // fallback to Acceleration (g)
+
+    // NPTS and DT from Line4  (e.g. "NPTS=   1999, DT=   .0100 SEC, ...")
+    NPTS = Number( ExtractFloats( Line4.slice( Line4.toUpperCase().indexOf('NPTS') ) )[0] );
+    DT   = ExtractFloats( Line4.slice( Line4.toUpperCase().indexOf('DT=') ) )[0];
+
+    // --- Data values ------------------------------------------------------------------------------
+    // Values are free-format and may span several values per line, so read line-by-line until NPTS values are collected
+    while ( ( data.length < NPTS ) && !EndOfFile ) {
+        temp = ExtractFloats( FGetL(dataview) );
+        data = data.concat(temp);
+    }
+    data     = data.slice(0, NPTS);
+    Time     = data.map( (v,ii) => ii * DT );
+    DateTime = convertDateString(EventInfo[1]);
+
+    // --- Build the Channel object ------------------------------------------------------------------
+    let res = new Channel();
+
+    res.FileName         = FileName;
+    res.TableName        = FileName.replace(/[-.]/g, '_');
+    res.FileListName     = 'FileList_' + res.TableName;
+    res.ChNum            = 0;
+    res.NumSamples       = data.length;
+    res.ScaleFactor      = 1;
+    res.Orientation      = Orientation;
+    res.DateTime         = DateTime;                          // PEER files do not include absolute date/time
+    res.Duration         = Time.at(-1);
+    res.DateTime_End     = ComputeEndDateTime(res.DateTime, res.Duration);
+    res.Lat              = undefined;
+    res.Long             = undefined;
+    res.FSamp            = 1 / DT;
+    res.delt             = DT;
+
+    temp                  = TypeAndUnit( TypeAndUnitIndex );
+    res.TypeAndUnits      = temp.TypeAndUnit;
+    res.Type              = temp.Type;
+    res.TypeString        = temp.Type_String;
+    res.Unit              = temp.Unit;
+    res.UnitString        = temp.Unit_String;
+
+    temp1                    = IntervalTypeAndUnit(1);          // Time, starts from zero, constant delt
+    res.IntervalTypeAndUnit  = temp1.IntervalTypeAndUnit;
+    res.IntervalType         = temp1.Type;
+    res.IntervalTypeString   = temp1.Type_String;
+    res.IntervalUnit         = temp1.Unit;
+    res.IntervalUnitString   = temp1.Unit_String;
+
+    res.InstFreq          = undefined;
+    res.InstPeriod        = undefined;
+    res.InstDamp          = undefined;
+
+    res.data              = data;
+    res.time              = Time;
+
+    // Statistics
+    temp         = Statistics(res.data, res.ScaleFactor);
+    res.Peak     = temp.Peak;
+    res.Mean     = temp.Mean;
+    res.RMS      = temp.RMS;
+    res.Residual = res.data.at(-1) * res.ScaleFactor;
+
+    // Add to the Main Table and Tree View
+    await Add_To_Table( res );
+
+    // Update the ProgressBar
+    await UpdateProgress(delta, "ProgressBar_Label");
+    await sleep(5);
+
+    // --- Local helper functions --------------------------------------------------------------------
+
+    function ExtractFloats(str) {
+        // Extracts all floating point numbers (including exponential notation) from a string
+        let regex, match, res=[];
+        regex = /[+-]?\d*\.?\d+(?:[eE][+-]?\d+)?/g;
+        while (match = regex.exec(str)) {
+            res.push( Number(match[0]) );
+        }
+        return res;
+    }
+
+    function Read_Int8(dataview) {
+        // Reads the next 1-byte and returns it
+
+        // Return an empty string if EndOfFile
+        if (EndOfFile) { return ''; }
+
+        // Read the one-byte
+        let content = dataview.getInt8( Ind );
+
+        // Increase the Ind-byte index by 1
+        Ind++;
+
+        // Check EndOfFile
+        if (Ind >= TNumByte) { EndOfFile = true; }
+
+        // Return the content of the 1-byte read
+        return content;
+    }
+
+    function FGetL(dataview) {
+        // Reads the file byte-by-byte until the next Line Feed (\n)
+        // Converts the bytes read to a string and returns it
+        let dat=[], content;
+
+        while (true) {
+            // Break the while-loop if EndOfFile
+            if (EndOfFile) { break; }
+
+            // Read Signed Integer of one-byte
+            content = Read_Int8( dataview );
+
+            // If the content is Carriage Return (\r), then continue reading, but do not include it in the dat[] array
+            if (content == 13) { continue; }
+
+            // If the content is a Line Feed (\n), then end-of-line is reached, so break the while-loop and return the dat[] array
+            if (content == 10) { break; }
+
+            // Append the content to the dat[] array
+            dat.push(content);
+        };
+
+        // Convert dat[] array into string and return
+        return String.fromCharCode.apply(null, dat);
+    }
+
+    function convertDateString(a) {
+        const [month, day, year] = a.split("/").map(Number);
+        const mm = String(month).padStart(2, "0");
+        const dd = String(day).padStart(2, "0");
+        return `${year}-${mm}-${dd}T00:00:00.00`;
+    }
+}
 //-------------------------------------------------------------------------------------------------------------
 async function Read_DAT_GEOSIG(FileName, delta, dataview) {
 
@@ -790,11 +974,10 @@ async function Read_DAT_GEOSIG(FileName, delta, dataview) {
     }
 }
 //-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 async function Read_DAT_Free(FileName, delta, dataview) {
+    
     const decoder = new TextDecoder("utf-8");
-    const uint8 = new Uint8Array(dataview.buffer);
+    const uint8   = new Uint8Array(dataview.buffer);
 
     let start = 0;
     let Data = [];
@@ -880,8 +1063,6 @@ async function Read_DAT_Free(FileName, delta, dataview) {
 
     }
 }
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 async function Read_VIF_BCSIMS(FileName, delta, dataview) {
     // Read the header information
@@ -1327,8 +1508,6 @@ async function Read_V1_COSMOS(FileName, delta, dataview) {
     }
 }
 //-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 async function Read_V1c_COSMOS( FileName, delta, dataview ) { 
     let TNumByte, EndOfFile=false;
     let i, Ind=0, header=[], IntHeaderNum=[], RealHeaderNum=[], data=[], Time=[];
@@ -1643,8 +1822,6 @@ async function Read_V1c_COSMOS( FileName, delta, dataview ) {
     }
 }
 //-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 async function Read_ASC(FileName, delta, dataview) {
 
     // Declaration of variables
@@ -1869,8 +2046,6 @@ async function Read_ASC(FileName, delta, dataview) {
 
     }
 }
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 async function Read_TXT(FileName, delta, dataview) {
 
@@ -2740,8 +2915,6 @@ async function Read_MSD(FileName, delta, dataview) {
 
 }
 //-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 function ComputeEndDateTime(startDateTime, lengthSeconds) {
   const start = new Date(startDateTime);
   const end = new Date(start.getTime() + lengthSeconds * 1000);
@@ -2754,15 +2927,11 @@ function ComputeEndDateTime(startDateTime, lengthSeconds) {
   return fmt(end).replace(" ", "T");
 }
 //-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 function FileExtension(FileName) {
     // Returns the extension of a file as string
     let Ind = FileName.indexOf('.');
     if (Ind == -1) { return ""; } else { return FileName.split('.').pop(); }
 }
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 function IsFileUploaded(FileName) {
     // Return TRUE if the FileName is included in the ChannelList already; otherwise, returns FALSE.
@@ -2771,8 +2940,6 @@ function IsFileUploaded(FileName) {
     }
     return false;
 }
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 // File Loading Progress Bar
 async function UpdateProgress(delta, Div_ID) {
@@ -2803,8 +2970,6 @@ async function UpdateProgress(delta, Div_ID) {
     }
 }
 //-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 // Download Files to client browser 
 function StartNewWorkBook() {
     let WorkBook = XLSX.utils.book_new();
@@ -2816,14 +2981,10 @@ function StartNewWorkBook() {
     return WorkBook;
 }
 //-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 function StartNewWorkSheet() {
     // Start an empty worksheet
     return XLSX.utils.aoa_to_sheet([[]]);
 }
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 function ColumnStyle(WorkSheet, range, columnConfig) {
     if (!range || !WorkSheet || !Array.isArray(columnConfig)) return;
@@ -2868,8 +3029,6 @@ function ColumnStyle(WorkSheet, range, columnConfig) {
     });
 }
 //-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 function AddDataToWorkSheet(WorkSheet, Header, Pos1, Data, Pos2, Data2=null, Pos3=null, Data3=null, Pos4=null) {
     // Add data to workSheet
     XLSX.utils.sheet_add_aoa(WorkSheet, Header, {origin: Pos1});
@@ -2881,8 +3040,6 @@ function AddDataToWorkSheet(WorkSheet, Header, Pos1, Data, Pos2, Data2=null, Pos
         XLSX.utils.sheet_add_aoa(WorkSheet, Data3,   {origin: Pos4});
     }
 }
-//-------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 async function DonwloadExcel_LoadDataPage() {
     
@@ -4608,7 +4765,6 @@ async function LoadServerSampleFilesDirectly() {
         }
     }
 }
-//-----------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------
 function Init_DragAndDrop_Upload() {
 
