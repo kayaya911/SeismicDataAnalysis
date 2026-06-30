@@ -25,6 +25,7 @@ function OnLoad() {
     initHorizontalResizer();
     initHamburgerMenu();
     Right_Click_ALL();
+    Init_DragAndDrop_Upload();
 
     // Hide the AnalysisMenu at start-up
     document.getElementById("Analysis_Menu").style.display = "none";

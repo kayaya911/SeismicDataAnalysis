@@ -4608,6 +4608,55 @@ async function LoadServerSampleFilesDirectly() {
         }
     }
 }
+//-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+function Init_DragAndDrop_Upload() {
 
+    let Overlay, DragCounter;
 
+    Overlay     = document.getElementById('DragDrop_Overlay');
+    DragCounter = 0;
+
+    function Is_File_Drag(e) {
+        return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+    }
+
+    window.addEventListener('dragover', (e) => {
+        if (!Is_File_Drag(e)) { return; }
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+    });
+
+    window.addEventListener('dragenter', (e) => {
+        if (!Is_File_Drag(e)) { return; }
+        e.preventDefault();
+        DragCounter++;
+        Overlay.style.display = 'flex';
+    });
+
+    window.addEventListener('dragleave', (e) => {
+        if (!Is_File_Drag(e)) { return; }
+        e.preventDefault();
+        DragCounter--;
+        if (DragCounter <= 0) {
+            DragCounter = 0;
+            Overlay.style.display = 'none';
+        }
+    });
+
+    window.addEventListener('drop', (e) => {
+        if (!Is_File_Drag(e)) { return; }
+        e.preventDefault();
+
+        DragCounter = 0;
+        Overlay.style.display = 'none';
+
+        let DroppedFiles = e.dataTransfer.files;
+        if (DroppedFiles && DroppedFiles.length > 0) {
+            Load_Files({ target: { files: DroppedFiles } });
+            AnalysisMenu_Selection(document.getElementById("MainMenu_LoadData"));
+        }
+    });
+}
+//-----------------------------------------------------------------------------------------------
 
