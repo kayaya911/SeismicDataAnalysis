@@ -4658,6 +4658,11 @@ async function DonwloadExcel_LoadDataPage() {
         ProgressBar_Update('Please wait -- ' + (i/ChannelList.length*100).toFixed(0).toString() + '% Done', 'red');
         await sleep(50);
     }
+
+
+    // 
+    Add_Disclaimer();
+
   
     // Inform user on progress (Wait for screen update)
     ProgressBar_Update("Please wait -- Writing XLSX File", 'red');
@@ -4706,6 +4711,70 @@ async function DonwloadExcel_LoadDataPage() {
 
         return numToCol(newCol) + newRow;
     }
+    function Add_Disclaimer() {
+        
+        // Create new workSheet for Disclaimer
+        WorkSheet = StartNewWorkSheet();
+
+        AddDataToWorkSheet(WorkSheet, [["Disclaimer"]], "A1", [[]], "A2");
+
+        const paragraphsList = Array.from(document.querySelectorAll('.Disclaimer_Body p')).map(p => p.textContent.trim());
+        let currentRow = 2;
+
+        for (const tt of paragraphsList) {
+            let headerCell = "A" + currentRow;
+            let dataCell   = "A" + (currentRow + 1);
+            AddDataToWorkSheet(WorkSheet, [[tt]], headerCell, [[]], dataCell);
+            currentRow += 1;
+        }
+
+        // Initialize the !merges array if it doesn't exist yet
+        if (!WorkSheet['!merges']) WorkSheet['!merges'] = [];
+
+        // Initialize the !rows array if it doesn't exist yet
+        if (!WorkSheet['!rows']) WorkSheet['!rows'] = [];
+
+        // Helper function to set heights safely (Row 1 is index 0, Row 3 is index 2, etc.)
+        const setRowHeight = (rowIndex, height) => {
+            WorkSheet['!rows'][rowIndex] = { hpt: height };
+        };
+
+        // Set row heights in points
+        setRowHeight(0, 40);  // Row 1
+        setRowHeight(1, 70);  // Row 3
+        setRowHeight(2, 95);  // Row 5
+        setRowHeight(3, 70);  // Row 7
+        setRowHeight(4, 55);  // Row 9
+        setRowHeight(5, 30); // Row 11
+        
+        // Add the merge range for A1 to E1 (0-indexed: Row 0, Col 0 to Row 0, Col 4)
+        WorkSheet['!merges'].push(XLSX.utils.decode_range('A1:E1'));
+        WorkSheet['!merges'].push(XLSX.utils.decode_range('A2:E2'));
+        WorkSheet['!merges'].push(XLSX.utils.decode_range('A3:E3'));
+        WorkSheet['!merges'].push(XLSX.utils.decode_range('A4:E4'));
+        WorkSheet['!merges'].push(XLSX.utils.decode_range('A5:E5'));
+        WorkSheet['!merges'].push(XLSX.utils.decode_range('A6:E6'));
+
+        if (!WorkSheet['!cols']) WorkSheet['!cols'] = [];
+        WorkSheet['!cols'][0] = { wch: 25 }; // Width of Column A
+        WorkSheet['!cols'][1] = { wch: 20 }; // Width of Column B
+        WorkSheet['!cols'][2] = { wch: 20 }; // Width of Column C
+        WorkSheet['!cols'][3] = { wch: 20 }; // Width of Column D
+        WorkSheet['!cols'][4] = { wch: 25 }; // Width of Column E
+
+        // Apply styles to A1 (the top-left cell of the merge holds the value and style)
+        WorkSheet["A1"].s  = {font: { bold: true, sz: 22 }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true } };
+        WorkSheet["A2"].s  = {font: { bold: true, sz: 14 }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true } };
+        WorkSheet["A3"].s  = {font: { bold: true, sz: 14 }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true } };
+        WorkSheet["A4"].s  = {font: { bold: true, sz: 14 }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true } };
+        WorkSheet["A5"].s  = {font: { bold: true, sz: 14 }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true } };
+        WorkSheet["A6"].s  = {font: { bold: true, sz: 14 }, alignment: { horizontal: 'left', vertical: 'center', wrapText: true } };
+
+        // Add the Disclaimer workSheet to WorkBook
+        XLSX.utils.book_append_sheet(WorkBook, WorkSheet, 'Disclaimer');
+
+    }
+
 
 }
 //-----------------------------------------------------------------------------------------------
