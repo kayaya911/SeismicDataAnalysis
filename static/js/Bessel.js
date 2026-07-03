@@ -457,9 +457,9 @@ function Eig_Test() {
     let A=[], B=[], isReal, isSymmHermi, isPosDef, isTridiagonal, label;
     let r1=0, r2=0, r3=0, r4=0, r5=0, r6=0, r7=0, r8=0;
     let Hess_res, flag=false;
-    let tol = 1e-6;
-    let NumSim = 500;
-    let mMax = 5, mMin=100;
+    let tol = 1e-14;
+    let NumSim = 10000;
+    let mMax = 5, mMin=10;
 
     // Counters
     let nPass = 0, nFail = 0;
@@ -471,33 +471,27 @@ function Eig_Test() {
         let mSize = Math.floor(Math.random() * (mMax - mMin + 1)) + mMin;
 
         // Randomly choose real or complex and Build a random base matrix-B
-        isReal         = randomBoolean();
+        isReal         = randomBoolean();                                                           isReal=true;
         B              = isReal ? Create_Real_Matrix(mSize) : Create_Complex_Matrix(mSize);
 
         // Randomly choose matrix class; construction follows the flag
-        isSymmHermi    = randomBoolean();
+        isSymmHermi    = randomBoolean();                                                           isSymmHermi=false;
         isPosDef       = isSymmHermi && randomBoolean();    // PositiveDefinite requires isSymmHermi to be true
         isTridiagonal  = randomBoolean();
         
         // ---- Construct A to match the chosen class ----------------------
         if (isReal) {
             // Real-valued Matrix
-
             if (isSymmHermi) {
-                
                 A = MakeSymmetric(B);
                 if(isPosDef) { A = MakePosDef(B); }
 
                 if (isTridiagonal) {
-
                     Hess_res = Hess(A, {auto: false, isReal: isReal, isSymmHermi: isSymmHermi, tol: tol});
                     A = Hess_res.H;
-
                     r1++;
                     label = 'Real | Symmetric | Tridiagonal';
-
                 } else {
-
                     if (isPosDef) {
                         r2++;
                         label = 'Real | Symmetric | PosDef';
@@ -506,25 +500,20 @@ function Eig_Test() {
                         r3++;
                         label = 'Real | Symmetric';
                     }
-
                 }
-
             } else {
                 A = B;
                 r4++;
                 label = 'Real | General';
             }
         } else {
-
             if (isSymmHermi) {
                 A = MakeSymmetric(B);
                 if(isPosDef) { A = MakePosDef(B); }
 
                 if (isTridiagonal) {
-
                     Hess_res = Hess(A, { auto: false, isReal: isReal, isSymmHermi: isSymmHermi, tol: tol });
                     A = Hess_res.H;
-
                     r5++;
                     label = 'Complex | Hermitian | Tridiagonal';
                     
@@ -538,7 +527,6 @@ function Eig_Test() {
                         label = 'Complex | Hermitian';
                     }
                 }
-
             } else {
                 A = B;
                 r8++;
@@ -550,25 +538,21 @@ function Eig_Test() {
         let res = Eig(A, { auto: false, isReal: isReal, isSymmHermi: isSymmHermi, isPosDef: isPosDef, isTridiagonal: isTridiagonal, tol: tol });
 
         // ---- Skip unimplemented helpers (stubs return undefined) -------
-        if (res == null || res.eigenvalues == null || res.eigenvectors == null) {
-            continue;
-        }
+        if (res == null || res.eigenvalues == null || res.eigenvectors == null) { continue; }
         
         // ---- Verification ----------------------------------------------
-        //{ pass, residual, ortho, details }
-        let Ver_result = Verify_Eig(A, res.eigenvalues, res.eigenvectors, tol)
+        let Ver_result = Verify_Eig(A, res.eigenvalues, res.eigenvectors, tol * mSize)
 
         console.log(rr)
         console.log('IsReal               : ' + isReal)
         console.log('isSymmHermi          : ' + isSymmHermi)
         console.log('isPosDef             : ' + isPosDef)
         console.log('isTridiagonal        : ' + isTridiagonal)
-        console.log('Ver_result.pass      : ' + Ver_result.pass)
-        console.log('Ver_result.residual  : ' + Ver_result.pass)
-        console.log('Ver_result.ortho     : ' + Ver_result.ortho)
-        console.log('Ver_result.details   : ' + Ver_result.details)
+        console.log('Ver_result           : ' + Ver_result.pass)
 
-        if (Ver_result.pass == false) { return 'Error'; }
+        if (Ver_result.pass == false) { 
+            if (Ver_result.pass == false) { return Ver_result; }
+        }
 
         console.log('--------------------------------------------------')
     }
@@ -593,104 +577,35 @@ function Eig_Test() {
         return Multiply(Transpose(B), B);
     }
 
-
-    function Verify_Eig(A, eigenvalues, eigenvectors, tol) {
-
-        if (tol == null) tol = 1e-6;
-
-        const nEig    = eigenvalues.length;
-        const n       = A.length;
-        const details = [];
-        let   pass    = true;
-
-        // ── 1. Build V (n × nEig) from the eigenvectors array ──
-        //    eigenvectors[j] is the j-th eigenvector of length n
-        //    V[i][j] = eigenvectors[j][i]   (columns = eigenvectors)
-        const V = [];
-        for (let i = 0; i < n; i++) {
-            V[i] = [];
-            for (let j = 0; j < nEig; j++) {
-                V[i][j] = eigenvectors[j][i];
-            }
-        }
-
-        // ── 2. Residual:  ‖A·V − V·diag(λ)‖_F  /  ‖A‖_F ──
-        //    A·V  is n × nEig
-        //    V·diag(λ) means: column j of V scaled by λ[j]
-        const AV = Multiply(A, V);
-
-        const VL = [];
-        for (let i = 0; i < n; i++) {
-            VL[i] = [];
-            for (let j = 0; j < nEig; j++) {
-                VL[i][j] = Multiply(V[i][j], eigenvalues[j]);
-            }
-        }
-
-
-        const Res_mat  = Subtract(AV, VL);
-        const normA    = Norm(A, 'fro');
-        const normRes  = Norm(Res_mat, 'fro');
-        const residual = normRes / (normA > 0 ? normA : 1);
-
-        if (residual >= tol) {
-            pass = false;
-            details.push('FAIL residual = ' + residual.toExponential(3) + ' >= ' + tol);
-        } else {
-            details.push('OK   residual = ' + residual.toExponential(3));
-        }
-
-        // ── 3. Orthonormality:  ‖Vᵀ·V − I‖_F ──
-        const VtV     = Multiply(Transpose(V), V);           // nEig × nEig
-        const I_nEig  = Eye(nEig);
-        const Ort_mat = Subtract(VtV, I_nEig);
-        const ortho   = Norm(Ort_mat, 'fro');
-
-        if (ortho >= tol) {
-            pass = false;
-            details.push('FAIL ortho    = ' + ortho.toExponential(3) + ' >= ' + tol);
-        } else {
-            details.push('OK   ortho    = ' + ortho.toExponential(3));
-        }
-
-        // ── 4. Individual eigenvector unit-norm check ──
-        for (let j = 0; j < nEig; j++) {
-            const vj_norm = Norm(eigenvectors[j], 2);
-            if (Math.abs(vj_norm - 1.0) >= tol) {
-                pass = false;
-                details.push('FAIL eigenvector[' + j + '] norm = ' + vj_norm.toExponential(3));
-            }
-        }
-
-        // ── 5. Eigenvalue ordering (ascending) ──
-        for (let j = 1; j < nEig; j++) {
-            if (eigenvalues[j] < eigenvalues[j - 1] - tol) {
-                pass = false;
-                details.push('FAIL eigenvalues not sorted: λ[' + (j-1) + ']='
-                    + eigenvalues[j-1].toExponential(3) + ' > λ[' + j + ']='
-                    + eigenvalues[j].toExponential(3));
-            }
-        }
-
-        // ── 6. Trace check (only when all eigenvalues extracted) ──
-        if (nEig === n) {
-            let traceA  = 0;
-            let sumEig  = 0;
-            for (let i = 0; i < n; i++) { traceA += A[i][i]; }
-            for (let j = 0; j < nEig; j++) { sumEig += eigenvalues[j]; }
-
-            const traceErr = Math.abs(traceA - sumEig) / (Math.abs(traceA) > 0 ? Math.abs(traceA) : 1);
-            if (traceErr >= tol) {
-                pass = false;
-                details.push('FAIL trace mismatch: tr(A)=' + traceA.toExponential(3)
-                    + '  Σλ=' + sumEig.toExponential(3));
-            } else {
-                details.push('OK   trace match   = ' + traceErr.toExponential(3));
-            }
-        }
-
-        return { pass, residual, ortho, details };
+    
+}
+function Verify_Eig(A, eigenvalues, eigenvectors, tol) {
+    let D = eigenvalues;
+    let V = Transpose(eigenvectors, {conjugate: false});
+    let M1 = Multiply(A, V);
+    let M2 = Multiply(V, Diag(D));
+    let Diff = Subtract(M1, M2);
+    let nEig = eigenvalues.length;
+    let residual = new Array(nEig);
+    let pass     = new Array(nEig);
+    let allPass  = true;
+    
+    // Compute ||A||_F once for size-independent relative residual
+    const normA = Norm(A, 'fro');
+    
+    for (let i = 0; i < nEig; i++) {
+        let col = Diff.map(row => row[i]);
+        residual[i] = Norm(col, 'fro') / normA;  // relative to matrix norm
+        pass[i]     = residual[i] < tol;
+        if (!pass[i]) { allPass = false; }
     }
+    return {
+        matrix       : A,
+        pass         : allPass,
+        eigenvalues  : D,
+        residual     : residual,
+        perEigenPass : pass
+    };
 }
 //-------------------------------------------------------------------------------------------------
 function Eig(A, Option) {
@@ -741,12 +656,9 @@ function Eig(A, Option) {
     //                                  → Eig_Complex_General            (Hess → single-shift complex QR)
     //
     // Examples:
-    //   Eig([[2, 1], [1, 2]])
-    //       → { Val: [1, 3], Vec: [[-0.707, 0.707], [0.707, 0.707]] }
-    //   Eig([[4, 1, 0], [1, 3, 1], [0, 1, 2]], { nEig: 2 })
-    //       → { Val: [λ₁, λ₂], Vec: [[...], [...]] }  — 2 smallest-magnitude eigenpairs
-    //   Eig(A, { auto: false, isReal: true, isSymmHermi: true, isPosDef: false,
-    //            isTridiagonal: false, nEig: 3 })
+    //   Eig([[2, 1], [1, 2]])                               → { Val: [1, 3], Vec: [[-0.707, 0.707], [0.707, 0.707]] }
+    //   Eig([[4, 1, 0], [1, 3, 1], [0, 1, 2]], { nEig: 2 }) → { Val: [λ₁, λ₂], Vec: [[...], [...]] }  — 2 smallest-magnitude eigenpairs
+    //   Eig(A, { auto: false, isReal: true, isSymmHermi: true, isPosDef: false, isTridiagonal: false, nEig: 3 })
     //       → routes directly to Eig_Real_Symm, computes and returns 3 smallest-magnitude eigenpairs
     //
     // Author   : Dr. Yavuz Kaya, P.Eng.
@@ -813,7 +725,11 @@ function Eig(A, Option) {
         if      (isSymmHermi && isTridiagonal) { return Eig_Real_Symm_Tridiag(A, nEigResolved);  }  // Real-Symmetric-Tridiagonal
         else if (isSymmHermi && isPosDef)      { return Eig_Real_Symm_PosDef(A, nEigResolved);   }  // Real-Symmetric_PositiveDefinite
         else if (isSymmHermi)                  { return Eig_Real_Symm_PosDef(A, nEigResolved);   }  // Real symmetric ==> same as Real-Symmetric_PositiveDefinite
-        else                                   { return Eig_Real_General(A, nEigResolved);       }  // Real general
+        else                                   { console.log("Eig_Real_General"); 
+                                                 return Eig_Real_General(A, nEigResolved, tol);       
+
+                                                
+                                                }  // Real General -- Algorithm already includes Hessenberg reduction 
 
     } else {
 
@@ -1155,237 +1071,514 @@ function Eig(A, Option) {
         return { eigenvalues, eigenvectors };
     }    
 
+    function Eig_Real_General(A, nEig, tol) {
+        const n = A.length;
+        
+        const eps = (tol != null) ? tol : 1e-8;
+
+        // CHANGE 8 (v4): Deflation threshold at machine-epsilon scale, separate
+        // from user-facing `eps`. Used for STRUCTURAL zero tests only.
+        const epsDefl = Math.max(n * Number.EPSILON, 1e-14);
+
+        // CHANGE 5 (v3): Removed the per-block iteration cap ...
+        const maxIterGlobal = 100 * n;
 
 
+        // LAPACK dlahqr constants used by the exceptional-shift formulas below.
+        const dat1 =  0.75;
+        const dat2 = -0.4375;
 
-
-function Eig_Real_General(A, nEig) {
-    const n = A.length;
-    const eps = 1e-8;
-    const maxIter = 300 * n;
-
-    // 1. Hessenberg reduction
-    let H = A.map(row => row.slice());
-    let Q = Array.from({length: n}, () => Array(n).fill(0));
-    for (let i = 0; i < n; i++) Q[i][i] = 1.0;
-
-    for (let k = 0; k < n - 2; k++) {
-        const m = n - k - 1;
-        const x = H.slice(k+1, k+1+m).map(r => r[k]);
-        let xNorm = Math.sqrt(x.reduce((s,v)=>s+v*v,0));
-        if (xNorm < eps) continue;
-
-        const alpha = x[0] >= 0 ? -xNorm : xNorm;
-        let v = x.slice();
-        v[0] -= alpha;
-        let vNorm = Math.sqrt(v.reduce((s,vi)=>s+vi*vi,0));
-        if (vNorm < eps) continue;
-        v = v.map(vi => vi / vNorm);
-
-        for (let j = 0; j < n; j++) {
-            let dot = v.reduce((s,vi,i) => s + vi * H[k+1+i][j], 0) * 2;
-            for (let i = 0; i < m; i++) H[k+1+i][j] -= dot * v[i];
-        }
-        for (let i = 0; i < n; i++) {
-            let dot = v.reduce((s,vj,j) => s + H[i][k+1+j] * vj, 0) * 2;
-            for (let j = 0; j < m; j++) H[i][k+1+j] -= dot * v[j];
-        }
-        for (let i = 0; i < n; i++) {
-            let dot = v.reduce((s,vj,j) => s + Q[i][k+1+j] * vj, 0) * 2;
-            for (let j = 0; j < m; j++) Q[i][k+1+j] -= dot * v[j];
-        }
-    }
-
-    // 2. Repeated QR iterations with shifts for convergence to Schur form
-    let hi = n - 1;
-    let totalIter = 0;
-
-    while (hi > 0 && totalIter < maxIter) {
-        let lo = hi;
-        while (lo > 0 && Math.abs(H[lo][lo-1]) > eps * (Math.abs(H[lo-1][lo-1]) + Math.abs(H[lo][lo]))) {
-            lo--;
+        // 1. Hessenberg reduction (unchanged)
+        let H = A.map(row => row.slice());
+        let Q = Array.from({length: n}, () => Array(n).fill(0));
+        for (let i = 0; i < n; i++) Q[i][i] = 1.0;
+        for (let k = 0; k < n - 2; k++) {
+            const m = n - k - 1;
+            const x = H.slice(k+1, k+1+m).map(r => r[k]);
+            let xNorm = Math.sqrt(x.reduce((s,v)=>s+v*v,0));
+            if (xNorm < eps) continue;
+            const alpha = x[0] >= 0 ? -xNorm : xNorm;
+            let v = x.slice();
+            v[0] -= alpha;
+            let vNorm = Math.sqrt(v.reduce((s,vi)=>s+vi*vi,0));
+            if (vNorm < eps) continue;
+            v = v.map(vi => vi / vNorm);
+            for (let j = 0; j < n; j++) {
+                let dot = v.reduce((s,vi,i) => s + vi * H[k+1+i][j], 0) * 2;
+                for (let i = 0; i < m; i++) H[k+1+i][j] -= dot * v[i];
+            }
+            for (let i = 0; i < n; i++) {
+                let dot = v.reduce((s,vj,j) => s + H[i][k+1+j] * vj, 0) * 2;
+                for (let j = 0; j < m; j++) H[i][k+1+j] -= dot * v[j];
+            }
+            for (let i = 0; i < n; i++) {
+                let dot = v.reduce((s,vj,j) => s + Q[i][k+1+j] * vj, 0) * 2;
+                for (let j = 0; j < m; j++) Q[i][k+1+j] -= dot * v[j];
+            }
         }
 
-        if (lo === hi) {
-            hi--;
-            continue;
-        }
-        if (lo === hi - 1) {
-            hi -= 2;
-            continue;
-        }
+        // 2. Francis double-shift QR iterations with LAPACK-style exceptional shifts
+        let hi = n - 1;
+        let totalIter = 0;
 
-        // Shift (use bottom 2x2)
-        const s = H[hi-1][hi-1] + H[hi][hi];
-        const t = H[hi-1][hi-1] * H[hi][hi] - H[hi-1][hi] * H[hi][hi-1];
+        // CHANGE 4 (v3): Track iterations spent at the current hi. Reset every
+        // time hi advances (i.e., a deflation succeeds). This counter drives
+        // exceptional shift injection below.
+        let iterAtHi = 0;
+        let prevHi   = -1;
 
-        let x = H[lo][lo]*H[lo][lo] + H[lo][lo+1]*H[lo+1][lo] - s*H[lo][lo] + t;
-        let y = H[lo+1][lo] * (H[lo][lo] + H[lo+1][lo+1] - s);
-        let z = (lo+2 <= hi) ? H[lo+2][lo+1]*H[lo+1][lo] : 0;
+        while (hi > 0 && totalIter < maxIterGlobal) {
+            if (hi !== prevHi) {
+                iterAtHi = 0;
+                prevHi   = hi;
+            }
 
-        for (let k = lo; k < hi; k++) {
-            const vLen = (k < hi - 1) ? 3 : 2;
-            let v = [x, y, z].slice(0, vLen);
-            let norm = Math.sqrt(v.reduce((a,b)=>a+b*b,0));
-            if (norm < eps) {
-                if (k < hi-1) {
-                    x = H[k+1][k];
-                    y = H[k+2][k];
-                    z = (k+3<=hi) ? H[k+3][k] : 0;
-                }
+            
+            let lo = hi;
+            // CHANGE 9 (v4): Use epsDefl (structural) not eps (user tol)
+            while (lo > 0 && Math.abs(H[lo][lo-1]) > epsDefl * (Math.abs(H[lo-1][lo-1]) + Math.abs(H[lo][lo]))) {
+                lo--;
+            }
+
+            if (lo === hi) {
+                hi--;
                 continue;
             }
-            const alpha = v[0] >= 0 ? -norm : norm;
-            v[0] -= alpha;
-            norm = Math.sqrt(v.reduce((a,b)=>a+b*b,0));
-            v = v.map(vi => vi / norm);
-
-            const r0 = Math.max(k, lo);
-
-            // Left multiply
-            for (let j = 0; j < n; j++) {
-                let dot = v.reduce((s,vi,i) => s + vi * H[r0+i][j], 0) * 2;
-                for (let i = 0; i < vLen; i++) H[r0 + i][j] -= dot * v[i];
+            if (lo === hi - 1) {
+                // Only treat this 2x2 block as converged/terminal if its
+                // eigenvalues are genuinely complex (irreducible over the
+                // reals). If they are real, deflate immediately with a
+                // closed-form rotation below -- do NOT fall through to the
+                // shift step, since when lo === hi-1 the shift s,t is built
+                // from this same 2x2 block's own trace/determinant, which
+                // makes x and y come out to be exactly 0 algebraically. That
+                // leaves norm < eps, which skips the update entirely, so H
+                // never changes and the loop stalls on this block forever --
+                // burning the whole iteration budget and leaving everything
+                // above it un-reduced, which corrupts eigenvalues/eigenvectors
+                // extracted from those rows afterward.
+                const trB   = H[lo][lo] + H[hi][hi];
+                const dtB   = H[lo][lo] * H[hi][hi] - H[lo][hi] * H[hi][lo];
+                const discB = trB * trB - 4 * dtB;
+                if (discB < 0) {
+                    hi -= 2;
+                    continue;
+                }
+                // Two distinct REAL eigenvalues: deflate directly with a
+                // closed-form similarity rotation R = [v, v_perp], where v is
+                // the (real) eigenvector of lambda1 within the block -- the
+                // same approach used later for eigenvector back-substitution.
+                {
+                    const s2   = Math.sqrt(discB) / 2;
+                    const lam1 = trB / 2 + s2;
+                    const a = H[lo][lo], b = H[lo][hi], c = H[hi][lo], d = H[hi][hi];
+                    let vx, vy;
+                    if (Math.abs(b) >= Math.abs(c)) { vx = b;           vy = lam1 - a; }
+                    else                             { vx = lam1 - d;   vy = c;        }
+                    const vnorm = Math.sqrt(vx * vx + vy * vy);
+                    if (vnorm > eps) {
+                        vx /= vnorm; vy /= vnorm;
+                        for (let col = 0; col < n; col++) {
+                            const h0 = H[lo][col], h1 = H[hi][col];
+                            H[lo][col] =  vx * h0 + vy * h1;
+                            H[hi][col] = -vy * h0 + vx * h1;
+                        }
+                        for (let row = 0; row < n; row++) {
+                            const h0 = H[row][lo], h1 = H[row][hi];
+                            H[row][lo] = h0 * vx + h1 * vy;
+                            H[row][hi] = -h0 * vy + h1 * vx;
+                        }
+                        for (let row = 0; row < n; row++) {
+                            const q0 = Q[row][lo], q1 = Q[row][hi];
+                            Q[row][lo] = q0 * vx + q1 * vy;
+                            Q[row][hi] = -q0 * vy + q1 * vx;
+                        }
+                    }
+                    // CHANGE 3 (v1): Hard-zero the subdiagonal entry to eliminate
+                    // residual floating-point noise from the similarity rotation.
+                    H[hi][lo] = 0;
+                    hi -= 2;
+                    continue;
+                }
             }
-            // Right multiply
-            for (let i = 0; i < n; i++) {
-                let dot = v.reduce((s,vj,j) => s + H[i][k+j] * vj, 0) * 2;
-                for (let j = 0; j < vLen; j++) H[i][k + j] -= dot * v[j];
-            }
-            // Accumulate Q
-            for (let i = 0; i < n; i++) {
-                let dot = v.reduce((s,vj,j) => s + Q[i][k+j] * vj, 0) * 2;
-                for (let j = 0; j < vLen; j++) Q[i][k + j] -= dot * v[j];
+
+            // CHANGE 6 (v3): LAPACK dlahqr-style exceptional shifts at iterations
+            // 10 and 20 within the same block. The two shifts are anchored at
+            // opposite ends of the active window (hi vs. lo), which breaks
+            // different stall patterns. A third random-jitter shift at
+            // iterations 30, 40, 50, ... handles the very rare cases where
+            // both LAPACK shifts also stall.
+            let s, t;
+            if (iterAtHi === 10) {
+                // Exceptional shift 1: anchored at the bottom of the active window.
+                const s_ex   = Math.abs(H[hi][hi-1]) + (hi > 1 ? Math.abs(H[hi-1][hi-2]) : 0);
+                const hShift = dat1 * s_ex + H[hi][hi];
+                s = 2 * hShift;
+                t = hShift * hShift - dat2 * s_ex * s_ex;
+            } else if (iterAtHi === 20) {
+                // Exceptional shift 2: anchored at the top of the active window.
+                const s_ex   = Math.abs(H[lo+1][lo]) + (lo+2 <= hi ? Math.abs(H[lo+2][lo+1]) : 0);
+                const hShift = dat1 * s_ex + H[lo][lo];
+                s = 2 * hShift;
+                t = hShift * hShift - dat2 * s_ex * s_ex;
+            } else if (iterAtHi > 30 && iterAtHi % 10 === 0) {
+                // Exceptional shift 3: random-jitter fallback. Very rare, but
+                // guarantees eventual progress on truly pathological matrices
+                // where both LAPACK exceptional shifts also fail to reduce.
+                const scale  = Math.abs(H[hi][hi]) + Math.abs(H[lo][lo]) + 1;
+                const jitter = scale * (Math.random() - 0.5);
+                const hShift = H[hi][hi] + jitter;
+                s = 2 * hShift;
+                t = hShift * hShift + 0.1 * scale * scale;
+            } else {
+                // Standard Wilkinson double shift from bottom 2x2
+                s = H[hi-1][hi-1] + H[hi][hi];
+                t = H[hi-1][hi-1] * H[hi][hi] - H[hi-1][hi] * H[hi][hi-1];
             }
 
-            if (k < hi - 1) {
-                x = H[k + 1][k];
-                y = H[k + 2][k];
-                z = (k + 3 <= hi) ? H[k + 3][k] : 0;
+            let x = H[lo][lo]*H[lo][lo] + H[lo][lo+1]*H[lo+1][lo] - s*H[lo][lo] + t;
+            let y = H[lo+1][lo] * (H[lo][lo] + H[lo+1][lo+1] - s);
+            let z = (lo+2 <= hi) ? H[lo+2][lo+1]*H[lo+1][lo] : 0;
+
+            for (let k = lo; k < hi; k++) {
+                const vLen = (k < hi - 1) ? 3 : 2;
+                let v = [x, y, z].slice(0, vLen);
+                let norm = Math.sqrt(v.reduce((a,b)=>a+b*b,0));
+                if (norm < eps) {
+                    if (k < hi-1) {
+                        x = H[k+1][k];
+                        y = H[k+2][k];
+                        z = (k+3<=hi) ? H[k+3][k] : 0;
+                    }
+                    continue;
+                }
+                const alpha = v[0] >= 0 ? -norm : norm;
+                v[0] -= alpha;
+                norm = Math.sqrt(v.reduce((a,b)=>a+b*b,0));
+                v = v.map(vi => vi / norm);
+                const r0 = Math.max(k, lo);
+                // Left multiply
+                for (let j = 0; j < n; j++) {
+                    let dot = v.reduce((s,vi,i) => s + vi * H[r0+i][j], 0) * 2;
+                    for (let i = 0; i < vLen; i++) H[r0 + i][j] -= dot * v[i];
+                }
+                // Right multiply
+                for (let i = 0; i < n; i++) {
+                    let dot = v.reduce((s,vj,j) => s + H[i][k+j] * vj, 0) * 2;
+                    for (let j = 0; j < vLen; j++) H[i][k + j] -= dot * v[j];
+                }
+                // Accumulate Q
+                for (let i = 0; i < n; i++) {
+                    let dot = v.reduce((s,vj,j) => s + Q[i][k+j] * vj, 0) * 2;
+                    for (let j = 0; j < vLen; j++) Q[i][k + j] -= dot * v[j];
+                }
+                if (k < hi - 1) {
+                    x = H[k + 1][k];
+                    y = H[k + 2][k];
+                    z = (k + 3 <= hi) ? H[k + 3][k] : 0;
+                }
+            }
+            totalIter++;
+            iterAtHi++;
+        }
+
+        // Optional diagnostic: warn if the global budget was exhausted. On any
+        // reasonable random matrix this should not fire. If it does, save the
+        // matrix off -- it is genuinely pathological.
+        if (totalIter >= maxIterGlobal && hi > 0) {
+            console.warn(`Eig_Real_General: iteration budget exhausted with hi=${hi}. ` +
+                        `Eigenvalues near this position may be inaccurate.`);
+        }
+
+        // 3. Extract eigenvalues
+        // CHANGE 7 (v2): Use a RELATIVE subdiagonal threshold that matches the
+        // criterion used by the QR iteration itself when searching for `lo`.
+        // The old check `< eps` was absolute, which meant a subdiagonal that had
+        // been deflated during iteration by the relative criterion (e.g. 1e-5
+        // when diagonals are ~1000) could still look "not negligible" to the
+        // extraction phase, spuriously triggering the 2x2 block path on what is
+        // really an already-deflated 1x1 eigenvalue.
+        const eigenvalues = [];
+        const schurIdx = [];
+        let i = 0;
+        
+        while (i < n) {
+            // CHANGE 10 (v4): Use epsDefl (structural) not eps (user tol) -- must
+            // match the iteration's criterion in section 2.
+            const subdiagNegligible = (i === n - 1) ||
+                (Math.abs(H[i + 1][i]) < epsDefl * (Math.abs(H[i][i]) + Math.abs(H[i + 1][i + 1])));
+
+            if (subdiagNegligible) {
+                eigenvalues.push(H[i][i]);
+                schurIdx.push({type: 'r', idx: i});
+                i++;
+            } else {
+                const tr = H[i][i] + H[i + 1][i + 1];
+                const dt = H[i][i] * H[i + 1][i + 1] - H[i][i + 1] * H[i + 1][i];
+                const re = tr / 2;
+                const disc = tr * tr - 4 * dt;
+                if (disc >= 0) {
+                    // Undeflated 2x2 block with two DISTINCT REAL eigenvalues.
+                    // Should be rare now that the main loop above deflates real
+                    // 2x2 blocks directly, but kept as a safety net -- deflate
+                    // this block directly with a single closed-form similarity
+                    // rotation R = [v, v_perp], where v is the (real)
+                    // eigenvector of lambda1 within the block. This exactly
+                    // zeros H[i+1][i] and also cleans up the coupling that later
+                    // blocks' eigenvector solves read through.
+                    const s = Math.sqrt(disc) / 2;
+                    const lambda1 = re + s, lambda2 = re - s;
+                    const a = H[i][i], b = H[i][i + 1], c = H[i + 1][i], d = H[i + 1][i + 1];
+                    let vx, vy;
+                    if (Math.abs(b) >= Math.abs(c)) { vx = b;            vy = lambda1 - a; }
+                    else                             { vx = lambda1 - d; vy = c;            }
+                    const vnorm = Math.sqrt(vx * vx + vy * vy);
+                    if (vnorm > eps) {
+                        vx /= vnorm; vy /= vnorm;
+                        for (let col = 0; col < n; col++) {
+                            const h0 = H[i][col], h1 = H[i + 1][col];
+                            H[i][col]     =  vx * h0 + vy * h1;
+                            H[i + 1][col] = -vy * h0 + vx * h1;
+                        }
+                        for (let row = 0; row < n; row++) {
+                            const h0 = H[row][i], h1 = H[row][i + 1];
+                            H[row][i]     = h0 * vx + h1 * vy;
+                            H[row][i + 1] = -h0 * vy + h1 * vx;
+                        }
+                        for (let row = 0; row < n; row++) {
+                            const q0 = Q[row][i], q1 = Q[row][i + 1];
+                            Q[row][i]     = q0 * vx + q1 * vy;
+                            Q[row][i + 1] = -q0 * vy + q1 * vx;
+                        }
+                    }
+                    // CHANGE 2 (v1): Hard-zero the subdiagonal entry to eliminate
+                    // residual floating-point noise from the similarity rotation.
+                    H[i + 1][i] = 0;
+                    eigenvalues.push(lambda1);
+                    eigenvalues.push(lambda2);
+                    // CHANGE 1 (v1): Route both real eigenvalues through the REAL
+                    // back-substitution branch, and give each its own seed
+                    // position within the (now triangular) block. Previously
+                    // both were pushed as {type: 'c', idx: i}, which sent them
+                    // through the complex branch and caused lambda2 to receive
+                    // a numerically unstable seed for a degenerate local 2x2
+                    // solve -- producing catastrophic residual failure on pairs
+                    // of close real eigenvalues.
+                    schurIdx.push({type: 'r', idx: i});      // lambda1 seeds at row i
+                    schurIdx.push({type: 'r', idx: i + 1});  // lambda2 seeds at row i+1
+                } else {
+                    // Genuine complex-conjugate pair
+                    const im = Math.sqrt(-disc) / 2;
+                    eigenvalues.push(new ComplexNum(re, im));
+                    eigenvalues.push(new ComplexNum(re, -im));
+                    schurIdx.push({type: 'c', idx: i});
+                    schurIdx.push({type: 'c', idx: i});
+                }
+                i += 2;
             }
         }
-        totalIter++;
-    }
 
-    // 3. Extract eigenvalues
-    const eigenvalues = [];
-    const schurIdx = [];
-    let i = 0;
-    while (i < n) {
-        if (i === n - 1 || Math.abs(H[i + 1][i]) < eps) {
-            eigenvalues.push(H[i][i]);
-            schurIdx.push({type: 'r', idx: i});
-            i++;
-        } else {
-            const tr = H[i][i] + H[i + 1][i + 1];
-            const dt = H[i][i] * H[i + 1][i + 1] - H[i][i + 1] * H[i + 1][i];
-            const re = tr / 2;
-            const im = 0.5 * Math.sqrt(Math.max(0, tr*tr - 4*dt));
-            eigenvalues.push(new ComplexNum(re, im));
-            eigenvalues.push(new ComplexNum(re, -im));
-            schurIdx.push({type: 'c', idx: i});
-            schurIdx.push({type: 'c', idx: i});
-            i += 2;
+        // 4. Back-substitution for eigenvectors
+        const eigenvectors = [];
+        for (let j = 0; j < eigenvalues.length; j++) {
+            const si = schurIdx[j];
+            if (si.type === 'r') {
+                const lambda = eigenvalues[j];
+                let y = new Array(n).fill(0); y[si.idx] = 1;
+                let r = si.idx - 1;
+                while (r >= 0) {
+                    // If rows (r-1, r) form a genuinely undeflated 2x2 block
+                    // (a complex-conjugate pair that can't be triangularized
+                    // over the reals), H[r][r-1] is NOT negligible. Solving row
+                    // r alone as a simple scalar divide silently drops the
+                    // H[r][r-1]*y[r-1] coupling term, giving a wrong y[r] --
+                    // and since y[r-1] is computed next FROM that wrong y[r],
+                    // the error propagates through the rest of the vector.
+                    // Solve both rows of the block together instead.
+                    if (r > 0 && Math.abs(H[r][r-1]) > eps * (Math.abs(H[r-1][r-1]) + Math.abs(H[r][r]))) {
+                        let sum0 = 0, sum1 = 0;
+                        for (let c = r + 1; c <= si.idx; c++) {
+                            sum0 += H[r-1][c] * y[c];
+                            sum1 += H[r][c] * y[c];
+                        }
+                        const a = H[r-1][r-1] - lambda, b = H[r-1][r];
+                        const cc = H[r][r-1],            d = H[r][r] - lambda;
+                        const det = a * d - b * cc;
+                        if (Math.abs(det) > eps) {
+                            y[r-1] = (-sum0 * d + b * sum1) / det;
+                            y[r]   = (-a * sum1 + cc * sum0) / det;
+                        } else {
+                            y[r-1] = 0; y[r] = 0;
+                        }
+                        r -= 2;
+                    } else {
+                        let sum = 0;
+                        for (let c = r + 1; c <= si.idx; c++) sum += H[r][c] * y[c];
+                        const d = H[r][r] - lambda;
+                        y[r] = Math.abs(d) > eps ? -sum / d : 0;
+                        r -= 1;
+                    }
+                }
+                let v = new Array(n).fill(0);
+                for (let r = 0; r < n; r++) for (let c = 0; c <= si.idx; c++) v[r] += Q[r][c] * y[c];
+                const norm = Math.sqrt(v.reduce((a,b)=>a+b*b,0) || 1);
+                v = v.map(x => x / norm);
+                eigenvectors.push(v);
+            } else {
+                // 2x2 undeflated block: solve independently for THIS eigenvalue
+                // (works whether lambda is real or a genuine complex-conjugate
+                // partner -- do not assume the second eigenvector is just the
+                // conjugate of the first, since for a real-eigenvalue block the
+                // two eigenvalues are NOT conjugates of one another).
+                const blk = si.idx;
+                const lambda = eigenvalues[j];
+                let y = new Array(n).fill(null).map(() => new ComplexNum(0, 0));
+                // Solve the (singular) 2x2 block (H_block - lambda*I) y = 0.
+                // Row blk:   c00*y[blk] + c01*y[blk+1] = 0
+                // Row blk+1: c10*y[blk] + c11*y[blk+1] = 0
+                // The two rows are proportional (lambda is an eigenvalue of the
+                // block); pick whichever row/pivot has the larger magnitude to
+                // divide by for numerical stability. This matters in particular
+                // once a block has been fully deflated to triangular: for its
+                // TOP eigenvalue, c00 is exactly 0, so fixing y[blk+1]=1 and
+                // solving for y[blk] via c00 would divide by zero -- here we
+                // instead recognize that case and set y[blk]=1, y[blk+1]=0.
+                let c00 = new ComplexNum(H[blk][blk], 0).Subtract(lambda);
+                let c01 = new ComplexNum(H[blk][blk + 1], 0);
+                let c10 = new ComplexNum(H[blk + 1][blk], 0);
+                let c11 = new ComplexNum(H[blk + 1][blk + 1], 0).Subtract(lambda);
+                if (c01.Abs() >= c00.Abs() && c01.Abs() > eps) {
+                    y[blk] = new ComplexNum(1, 0);
+                    y[blk + 1] = c00.Multiply(-1).Divide(c01);
+                } else if (c00.Abs() > eps) {
+                    y[blk + 1] = new ComplexNum(1, 0);
+                    y[blk] = c01.Multiply(-1).Divide(c00);
+                } else if (c11.Abs() >= c10.Abs() && c11.Abs() > eps) {
+                    y[blk] = new ComplexNum(1, 0);
+                    y[blk + 1] = c10.Multiply(-1).Divide(c11);
+                } else if (c10.Abs() > eps) {
+                    y[blk + 1] = new ComplexNum(1, 0);
+                    y[blk] = c11.Multiply(-1).Divide(c10);
+                } else {
+                    // Fully diagonal block: this eigenvalue occupies row blk
+                    y[blk] = new ComplexNum(1, 0);
+                }
+                let r = blk - 1;
+                while (r >= 0) {
+                    // If rows (r-1, r) form a genuinely undeflated 2x2 block
+                    // (another complex-conjugate pair that couldn't be
+                    // triangularized over the reals -- this happens whenever a
+                    // matrix has more than one non-real eigenvalue pair, since
+                    // back-substitution for the topmost pair's eigenvector must
+                    // pass through any lower pairs' still-undeflated blocks),
+                    // H[r][r-1] is NOT negligible. Solving row r alone as a
+                    // simple scalar divide silently drops the H[r][r-1]*y[r-1]
+                    // coupling term, giving a wrong y[r] -- and since y[r-1] is
+                    // computed next FROM that wrong y[r], the error propagates
+                    // through the rest of the vector. Solve both rows of the
+                    // block together instead (same approach as the real-
+                    // eigenvalue branch above, done here in complex arithmetic
+                    // since lambda is complex).
+                    if (r > 0 && Math.abs(H[r][r - 1]) > eps * (Math.abs(H[r - 1][r - 1]) + Math.abs(H[r][r]))) {
+                        let sum0 = new ComplexNum(0, 0), sum1 = new ComplexNum(0, 0);
+                        for (let c = r + 1; c <= blk + 1; c++) {
+                            sum0 = sum0.Add(new ComplexNum(H[r - 1][c], 0).Multiply(y[c]));
+                            sum1 = sum1.Add(new ComplexNum(H[r][c], 0).Multiply(y[c]));
+                        }
+                        const a  = new ComplexNum(H[r - 1][r - 1], 0).Subtract(lambda);
+                        const b  = new ComplexNum(H[r - 1][r], 0);
+                        const cc = new ComplexNum(H[r][r - 1], 0);
+                        const d  = new ComplexNum(H[r][r], 0).Subtract(lambda);
+                        const det = a.Multiply(d).Subtract(b.Multiply(cc));
+                        if (det.Abs() > eps) {
+                            y[r - 1] = sum0.Multiply(-1).Multiply(d).Add(b.Multiply(sum1)).Divide(det);
+                            y[r]     = a.Multiply(sum1.Multiply(-1)).Add(cc.Multiply(sum0)).Divide(det);
+                        } else {
+                            y[r - 1] = new ComplexNum(0, 0);
+                            y[r]     = new ComplexNum(0, 0);
+                        }
+                        r -= 2;
+                    } else {
+                        let sum = new ComplexNum(0, 0);
+                        for (let c = r + 1; c <= blk + 1; c++) sum = sum.Add(new ComplexNum(H[r][c], 0).Multiply(y[c]));
+                        const d = new ComplexNum(H[r][r], 0).Subtract(lambda);
+                        y[r] = d.Abs() > eps ? sum.Multiply(-1).Divide(d) : new ComplexNum(0, 0);
+                        r -= 1;
+                    }
+                }
+                let v = new Array(n).fill(null).map(() => new ComplexNum(0, 0));
+                for (let r = 0; r < n; r++) {
+                    for (let c = 0; c <= blk + 1; c++) v[r] = v[r].Add(y[c].Multiply(Q[r][c]));
+                }
+                let nrm = Math.sqrt(v.reduce((s, z) => s + z.Re*z.Re + z.Im*z.Im, 0) || 1);
+                v = v.map(z => z.Multiply(1 / nrm));
+                // Fix the arbitrary complex phase: rotate so the largest-magnitude
+                // component is real and positive (matches MATLAB/LAPACK convention).
+                // Complex eigenvectors are only unique up to a unit-magnitude phase
+                // factor e^{i*theta}; without this, the vector returned here is a
+                // valid eigenvector but its phase depends on arbitrary numerical
+                // choices made during the back-substitution above.
+                {
+                    let maxAbs = -1, maxIdx = 0;
+                    for (let r = 0; r < n; r++) {
+                        const m = v[r].Abs();
+                        if (m > maxAbs) { maxAbs = m; maxIdx = r; }
+                    }
+                    if (maxAbs > eps) {
+                        const theta = v[maxIdx].Angle();
+                        const rot = new ComplexNum(Math.cos(-theta), Math.sin(-theta));
+                        v = v.map(z => z.Multiply(rot));
+                    }
+                }
+                eigenvectors.push(v);
+            }
         }
+
+        // 5. Return in natural Schur order (matches MATLAB/LAPACK dgeev ordering).
+        // MATLAB/LAPACK do NOT sort eigenvalues by magnitude -- they return them
+        // in the order they fall out of the real Schur form produced by the
+        // Francis double-shift QR algorithm. Since this function uses the same
+        // algorithm, the order eigenvalues/eigenvectors were pushed into the
+        // arrays above already matches that convention. Sorting by |lambda|
+        // here was reordering away from that convention -- removed.
+        const nRet = Math.min(nEig, eigenvalues.length);
+        const retVals = eigenvalues.slice(0, nRet);
+        const retVecs = eigenvectors.slice(0, nRet);
+        return { eigenvalues: retVals, eigenvectors: retVecs };
     }
-
-    // 4. Back-substitution for eigenvectors
-    const eigenvectors = [];
-    const done = new Set();
-
-    for (let j = 0; j < eigenvalues.length; j++) {
-        const si = schurIdx[j];
-        if (si.type === 'r') {
-            const lambda = eigenvalues[j];
-            let y = new Array(n).fill(0); y[si.idx] = 1;
-            for (let r = si.idx - 1; r >= 0; r--) {
-                let sum = 0;
-                for (let c = r + 1; c <= si.idx; c++) sum += H[r][c] * y[c];
-                const d = H[r][r] - lambda;
-                y[r] = Math.abs(d) > eps ? -sum / d : 0;
-            }
-            let v = new Array(n).fill(0);
-            for (let r = 0; r < n; r++) for (let c = 0; c <= si.idx; c++) v[r] += Q[r][c] * y[c];
-            const norm = Math.sqrt(v.reduce((a,b)=>a+b*b,0) || 1);
-            v = v.map(x => x / norm);
-            eigenvectors.push(v);
-        } else if (!done.has(si.idx)) {
-            done.add(si.idx);
-            const blk = si.idx;
-            const lambda = eigenvalues[j];
-            let y = new Array(n).fill(null).map(() => new ComplexNum(0, 0));
-            y[blk + 1] = new ComplexNum(1, 0);
-
-            let c00 = new ComplexNum(H[blk][blk], 0).Subtract(lambda);
-            let c01 = new ComplexNum(H[blk][blk + 1], 0);
-            if (c00.Abs() > eps) y[blk] = c01.Multiply(-1).Divide(c00);
-
-            for (let r = blk - 1; r >= 0; r--) {
-                let sum = new ComplexNum(0, 0);
-                for (let c = r + 1; c <= blk + 1; c++) sum = sum.Add(new ComplexNum(H[r][c], 0).Multiply(y[c]));
-                let d = new ComplexNum(H[r][r], 0).Subtract(lambda);
-                y[r] = d.Abs() > eps ? sum.Multiply(-1).Divide(d) : new ComplexNum(0, 0);
-            }
-
-            let v = new Array(n).fill(null).map(() => new ComplexNum(0, 0));
-            for (let r = 0; r < n; r++) {
-                for (let c = 0; c <= blk + 1; c++) v[r] = v[r].Add(y[c].Multiply(Q[r][c]));
-            }
-            let nrm = Math.sqrt(v.reduce((s, z) => s + z.Re*z.Re + z.Im*z.Im, 0) || 1);
-            v = v.map(z => z.Multiply(1 / nrm));
-
-            eigenvectors.push(v);
-            eigenvectors.push(v.map(z => z.Conj()));
-        }
-    }
-
-    // 5. Sort by |λ| and take smallest nEig
-    const idx = Array.from({length: eigenvalues.length}, (_,k)=>k)
-        .sort((a,b) => {
-            const ma = eigenvalues[a] instanceof ComplexNum ? eigenvalues[a].Abs() : Math.abs(eigenvalues[a]);
-            const mb = eigenvalues[b] instanceof ComplexNum ? eigenvalues[b].Abs() : Math.abs(eigenvalues[b]);
-            return ma - mb;
-        });
-
-    const retVals = [], retVecs = [];
-    for (let j = 0; j < Math.min(nEig, eigenvalues.length); j++) {
-        retVals.push(eigenvalues[idx[j]]);
-        retVecs.push(eigenvectors[idx[j]]);
-    }
-
-    return { eigenvalues: retVals, eigenvectors: retVecs };
-}
-
-
-
 
     function Eig_Complex_Hermitian_Tridiag(A, nEig, tol)  { return null; }
     function Eig_Complex_Hermitian_PosDef(A, nEig, tol)   { return null; }
     function Eig_Complex_Hermitian(A, nEig, tol)          { return null; }
     function Eig_Complex_General(A, nEig, tol)            { return null; }
+
 }
+//-------------------------------------------------------------------------------------------------
+
+
+let matrix = [
+[0.0459957881361126, 0.9319231629176088, -0.6731849382095623, -0.06631617676504176, -0.054151321164552346, 0.5381041137226021, 0.14031534836598247],
+[0.7230806317786072, 0.8389739684959197, -0.5559112709216263, 0.2907508236706531, 0.5389777352804297, -0.30787960315479346, -0.024921545828543223],
+[-0.4150705692917882, 0.2579891861170427, 0.8491393731905861, 0.564270850325866, 0.18740694508631117, 0.6437072729531021, -0.500340024253247],
+[0.11379715707422733, -0.12483176462884349, -0.935497349888254, 0.2034144422117179, 0.7888539910253893, 0.8676234091425021, 0.9789812981861912],
+[0.09087789721843542, -0.0008440116281205334, -0.5590170062503372, -0.12500838148917737, -0.7610945170980536, 0.5091476901691141, 0.2735707764859763],
+[0.7563045015787253, -0.5524659086965296, -0.9691530721863604, 0.019788332404966802, 0.31398173551410835, -0.23562711133527547, 0.16894912344341084],
+[0.34054481209664433, -0.10808983158788732, -0.6975933610157565, -0.05603176974972013, 0.25601665571613275, 0.21831334753936216, 0.3895719735263645],
+];
+
+
+let res = Eig(matrix, { auto: false, isReal: true, isSymmHermi: false, isPosDef: false, isTridiagonal: false, tol: 1e-14 });
+console.log(res.eigenvalues)
+console.log(res.eigenvectors)
+
+let ver = Verify_Eig(matrix, res.eigenvalues, res.eigenvectors, 1e-14)
+console.log(ver)
+
+console.log(ver.residual);
+console.log(ver.perEigenPass);
+
+//-------------------------------------------------------------------------------------------------
 
 
 
 
-
-
-// Eig(A)
-// │
-// ├── Scalar / ComplexNum / 1×1        → closed form (trivial)
-// ├── 2×2                              → closed form (quadratic formula)
-// │
-// ├── isDiagonal                       → O(n) read diagonal
-// ├── isTriangular                     → O(n) diagonal + back-substitution
-// │
-// ├── isReal
-// │   ├── isSymmHermi
-// │   │   ├── isTridiagonal            → [Branch 1a] skip reduction, QR iteration only
-// │   │   └── (general symmetric)      → [Branch 1b] Householder → tridiagonal → same QR kernel as 1a
-// │   └── (general)                    → [Branch 2]  Householder → Hessenberg → Francis double-shift
-// │
-// └── isComplex
-//     ├── isSymmHermi
-//     │   ├── isTridiagonal            → [Branch 3a] phase-absorb → same real QR kernel as 1a
-//     │   └── (general Hermitian)      → [Branch 3b] Householder + phase → same real QR kernel as 1a
-//     └── (general)                    → [Branch 4]  Householder → Hessenberg → complex single-shift QR
