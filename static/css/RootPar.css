@@ -1,0 +1,60 @@
+:root {
+    /* Main Windows  */
+    --main-background-color: rgb(171, 169, 169);
+
+    /* Resizable Windowsa  */ 
+    --panel-background-color: #ffffff;
+    --panel-padding: 0.1rem;
+    --panel-font-size: 2rem;
+    --min-panel1-height: 0;
+    --min-panel2-height: 0;
+    --min-panel3-height: 0;
+    --resize-handle-height: 1.0rem;
+    --bottom-panel-height: 4.0rem; 
+
+    /* SideBar */
+    --sidebar-min-width: 0rem;
+    --sidebar-initial-width: 15rem;
+    --sidebar-title-height:2rem;
+    --resize-handle-width: 1rem;
+    
+    /* Table for channels */
+    --Channels_Table_Row_Color_Hover: rgba(172, 172, 240, 0.25);
+    --Channels_Table_Row_Color: rgba(248, 246, 246, 1.0);
+    --Table_Head_Color: rgb(220, 216, 216);
+    --Drift_Table_Head_Color: rgb(211, 209, 209);
+
+    /* Parameters Windows*/
+    --parameters-body-color: rgba(242, 235, 235, 1.0);
+
+    /* Header  */
+    --header-main-color: rgb(242, 160, 19);
+    --header-logo-font-size: 1.5rem;
+    --header-logo-font-color: black;
+    --header-height: 5.5rem;
+    --header-height-svg: 2rem;
+    
+    /* Sidebar  */
+    --sidebar-height-svg: 1.5rem;
+
+    /* MainMenu */
+    --mainMenu-color: rgba(132,179,245, 1.0);
+    --mainMenu-li-color: white;
+    --mainMenu-li-border-color: grey;
+    --mainMenu-li-hover-color: rgb(189, 238, 215);
+    --mainMenu-li-boxShadow-color: rgb(219, 217, 217);
+
+    /* Righ-click Menu*/
+    --righClick-background-color: #faf1f1;
+    --righClick-Li-background-color: #e3e1e1;
+}
+
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; 
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}

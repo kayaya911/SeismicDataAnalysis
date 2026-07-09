@@ -1,0 +1,405 @@
+/* Container & Global Typography */
+.help-container {
+    padding: 1.5rem 3.0rem;
+    font-size: 1.0rem;
+    line-height: 1.6;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.help-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    padding-bottom: 0.4rem;
+    border-bottom: 0.15rem solid #ddd;
+}
+
+.help-intro {
+    color: #555;
+    margin: 0 0 0.75rem 0;
+    padding-bottom: 4px;
+    text-align: justify;
+}
+
+.help-intro:last-of-type {
+    margin-bottom: 2rem;
+}
+
+.help-intro-indent {
+    margin-left: 1.5rem;
+    padding-left: 0.75rem;
+    border-left: 0.15rem solid #828080;
+    margin-bottom: 0.40rem;
+}
+
+.help-summary {
+    color: #666;
+    font-style: italic;
+    margin: 0 0 1rem 0;
+}
+
+/* Table of Contents */
+.help-toc {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.help-toc h3 {
+    font-size: 1.1rem;
+    margin: 1rem 0 0.5rem 0;
+    color: #444;
+}
+
+.help-toc ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.help-toc li {
+    margin-bottom: 0.4rem;
+}
+
+.help-toc a {
+    text-decoration: none;
+    color: #3a5bd9;
+    font-weight: 500;
+}
+
+.help-toc a:hover {
+    text-decoration: underline;
+}
+
+/* Parameter Tables */
+.help-param-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    font-size: 1.0rem;
+}
+
+.help-param-table tr {
+    border-bottom: 0.0625rem solid #f0f0f0;
+    vertical-align: top;
+}
+
+.help-param-table tr:last-child {
+    border-bottom: none;
+}
+
+.help-param-label {
+    font-weight: 500;
+    padding: 0.5rem 1rem 0.5rem 0;
+    width: 28%;
+}
+
+.help-param-detail {
+    padding: 0.5rem 0;
+}
+
+/* Badges & Descriptions */
+.help-param-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3125rem;
+    margin-bottom: 0.3125rem;
+}
+
+.help-param-default {
+    font-size: 1.0rem;
+    background: #eef1ff;
+    color: #3a5bd9;
+    border-radius: 1.0rem;
+    padding: 0.0625rem 0.0rem;
+    white-space: nowrap;
+}
+
+.help-param-options {
+    font-size: 1.0rem;
+    background: #f9f4e8;
+    color: #7a5500;
+    border-radius: 0.1875rem;
+    padding: 0.0625rem 0.4375rem;
+}
+
+.help-param-desc {
+    margin: 0;
+    color: #444;
+    line-height: 1.55;
+}
+
+/* Subsections & Notes */
+.help-subsection {
+    margin: 1.2rem 0 0 0;
+}
+
+.help-subsection-heading {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 0.35rem 0;
+    padding-bottom: 0.25rem;
+    border-bottom: 0.0625rem dashed #ddd;
+}
+
+.help-notes {
+    margin: 1rem 0 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.help-notes li {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 0.4rem;
+    padding: 0.375rem 0.625rem 0.375rem 2rem;
+    background: #f8f8f8;
+    border-radius: 0.25rem;
+    position: relative;
+}
+
+.help-notes li::before {
+    content: "ℹ";
+    position: absolute;
+    left: 0.625rem;
+    color: #888;
+}
+
+/* Accordion Component */
+.help-accordion {
+    border: 0.0625rem solid #e0e0e0;
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+
+.help-accordion-item {
+    border-bottom: 0.0625rem solid #e0e0e0;
+}
+
+.help-accordion-item:last-child {
+    border-bottom: none;
+}
+
+.help-accordion-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #f9f9f9;
+    border: none;
+    border-bottom: 0.15rem solid #ddd;
+    cursor: pointer;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.help-accordion-header:hover {
+    background: #f8e8e8;
+}
+
+.help-accordion-item.open .help-accordion-header {
+    background: #eef1ff;
+    color: #3a5bd9;
+    border-bottom-color: #3a5bd9;
+}
+
+.help-accordion-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: currentColor;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+}
+
+.help-accordion-item.open .help-accordion-icon {
+    transform: rotate(180deg);
+}
+
+.help-accordion-body {
+    display: none;
+    padding: 1rem 1.25rem 1.25rem 1.25rem;
+    background: #fff;
+    overflow-x: hidden;
+}
+
+.help-accordion-item.open .help-accordion-body {
+    display: block;
+}
+
+
+
+
+/* Nested Accordion Styles */
+.help-nested-accordion {
+    margin-top: 1rem;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.help-nested-item {
+    border-bottom: 1px solid #eee;
+}
+
+.help-nested-item:last-child {
+    border-bottom: none;
+}
+
+.help-nested-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: #fafafa;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem !important;
+    font-weight: 500;
+    text-align: left;
+}
+
+.help-nested-header:hover {
+    background: #f0f0f0;
+}
+
+.help-nested-body {
+    display: none;
+    padding: 1rem;
+    background: #f5f5f5;
+}
+
+.help-nested-item.open .help-nested-body {
+    display: block;
+}
+
+.help-nested-item.open .help-nested-header {
+    background: #f4f6ff;
+    color: #3a5bd9;
+}
+
+
+
+
+/* Cover Page (screen: hidden) */
+.help-cover-page {
+    display: none;
+}
+
+/* Print Styles */
+@media print {
+    header, .sidebar, .resize-handle-horizontal,
+    #panel1, #panel2, #panel3, .Analysis_Menu_Container,
+    .Right_Click_Div, .help-print-btn {
+        display: none !important;
+    }
+
+    .main-wrapper, #content, .resizable-panels-wrapper,
+    .resizable-panel-4, #panel4 {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    body { font-size: 0.75rem; }
+
+    .help-container { padding: 0; }
+
+    .help-toc {
+        page-break-after: always !important;
+        break-after: page !important;
+    }
+
+    .help-title {
+        page-break-before: always !important;
+        break-before: page !important;
+        margin-top: 0 !important;
+        border-bottom: 0.20rem solid #000 !important;
+        padding-bottom: 0.4rem !important;
+    }
+
+    .help-accordion-item {
+        page-break-before: always !important;
+        break-before: page !important;
+        display: block !important;
+        border: none !important;
+    }
+
+    .help-accordion-body {
+        display: block !important;
+        padding: 0 !important;
+    }
+
+    .help-accordion-icon { display: none !important; }
+
+    .help-accordion-header {
+        background: none !important;
+        color: #000 !important;
+        border-top: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-bottom: 0.20rem solid #000 !important;
+        padding-left: 0 !important;
+        pointer-events: none;
+    }
+
+    .help-accordion { border: none !important; }
+
+    /* Cover Page */
+    .help-cover-page {
+        display: block !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .help-cover-center {
+        text-align: center;
+        padding-top: 120mm;
+        padding-bottom: 60mm;
+    }
+
+    .help-cover-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .help-cover-subtitle {
+        font-size: 1.4rem;
+        font-weight: 400;
+        color: #444;
+        margin: 0;
+    }
+
+    .help-cover-footer {
+        text-align: center;
+    }
+
+    .help-cover-datetime {
+        font-size: 0.95rem;
+        color: #555;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .help-cover-location {
+        font-size: 0.95rem;
+        color: #555;
+        margin: 0;
+    }
+}
+
+@page {
+    margin: 25mm 30mm;
+}
